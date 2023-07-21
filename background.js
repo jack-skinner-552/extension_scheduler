@@ -37,7 +37,7 @@ function getTotalMinutesSinceMidnight(timeString) {
 
 // Function to handle extension toggling based on time
 async function handleExtensionToggle() {
-  console.log('Extension Scheduler - handleExtensionToggle function called.');
+  console.log('handleExtensionToggle function called.');
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -66,21 +66,25 @@ async function handleExtensionToggle() {
       const displayEndHour = adjustedEndHour % 12 || 12; // Use modulo 12 to get correct 12-hour format
       const displayEndAmPm = adjustedEndHour >= 12 ? 'PM' : 'AM';
 
-      // console.log('Current time:', currentHour + ':' + currentMinute);
-      // console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
-      // console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
+      console.log('Current time:', currentHour + ':' + currentMinute);
+      console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
+      console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
 
       // Convert start and end times to minutes since midnight
       const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
-      const adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
+      const adjustedEndMinutes = getTotalMinutesSinceMidnight(`${displayEndHour}:${endMinute} ${displayEndAmPm}`);
 
       // Convert the current time to minutes since midnight
       const currentMinutes = currentHour * 60 + currentMinute;
 
       // Check if the current time is within the active time range
-      const isAfterStartTime = currentMinutes >= adjustedStartMinutes;
-      const isBeforeEndTime = currentMinutes < adjustedEndMinutes;
-      const isWithinActiveTimeRange = isAfterStartTime && isBeforeEndTime; // Update this line
+        let isWithinActiveTimeRange;
+        if (adjustedStartMinutes <= adjustedEndMinutes) {
+          isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+        } else {
+          // Handle the case when end time is after 1:00 PM (PM to AM transition)
+          isWithinActiveTimeRange = !(currentMinutes >= adjustedEndMinutes && currentMinutes < adjustedStartMinutes);
+        }
 
       console.log('isWithinActiveTimeRange:', isWithinActiveTimeRange);
 
@@ -122,6 +126,7 @@ async function handleExtensionToggle() {
     }
   );
 }
+
 
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(function (message) {
