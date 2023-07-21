@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Extension Scheduler",
+  "version": "1.0",
+  "permissions": ["management", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-off-new.png",
+      "48": "icon-off-new.png",
+      "128": "icon-off-new.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["css/styles.css", "images/icon.png"],
+      "matches": ["https://example.com/*"]
+    }
+  ],
+  "icons": {
+    "16": "icon-off-new.png",
+    "48": "icon-off-new.png",
+    "128": "icon-off-new.png"
+  }
+}

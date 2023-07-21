@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Extension Options</title>
+  <script type="module" src="options.js"></script>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1>Extension Options</h1>
+
+  <h2>Extensions</h2>
+  <ul id="extensionList"></ul>
+
+  <div>
+    <h2>Start Time</h2>
+    <input type="number" id="startHour" min="1" max="12" value="8">
+    <input type="number" id="startMinute" min="0" max="59" value="0">
+    <select id="startAmPm">
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+
+  <div>
+    <h2>End Time</h2>
+    <input type="number" id="endHour" min="1" max="12" value="4">
+    <input type="number" id="endMinute" min="0" max="59" value="0">
+    <select id="endAmPm">
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+
+  <button id="saveButton">Save</button>
+  <div id="statusText"></div>
+</body>
+</html>

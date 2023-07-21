@@ -1,0 +1,23 @@
+/* Styles for the extension list */
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Styles for the extension icon */
+.extension-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+/* Styles for the status text */
+#status {
+  margin-bottom: 16px;
+}
