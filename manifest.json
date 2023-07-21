@@ -6,9 +6,9 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon-off-new.png",
-      "48": "icon-off-new.png",
-      "128": "icon-off-new.png"
+      "16": "icon-off.png",
+      "48": "icon-off.png",
+      "128": "icon-off.png"
     }
   },
   "background": {
@@ -21,8 +21,8 @@
     }
   ],
   "icons": {
-    "16": "icon-off-new.png",
-    "48": "icon-off-new.png",
-    "128": "icon-off-new.png"
+    "16": "icon-off.png",
+    "48": "icon-off.png",
+    "128": "icon-off.png"
   }
 }

@@ -66,9 +66,9 @@ async function handleExtensionToggle() {
       const displayEndHour = adjustedEndHour % 12 || 12; // Use modulo 12 to get correct 12-hour format
       const displayEndAmPm = adjustedEndHour >= 12 ? 'PM' : 'AM';
 
-      // console.log('Current time:', currentHour + ':' + currentMinute);
-      // console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
-      // console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
+      console.log('Current time:', currentHour + ':' + currentMinute);
+      console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
+      console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
 
       // Convert start and end times to minutes since midnight
       const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);

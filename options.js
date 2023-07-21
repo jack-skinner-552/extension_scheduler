@@ -100,6 +100,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   if (extensionList) {
     // Get all extensions and sort them alphabetically
     chrome.management.getAll(function (extensions) {
+      extensions = extensions.filter(function (extension) {
+        return extension.type === 'extension' && extension.id !== chrome.runtime.id && !extension.installType.includes('admin');
+      });
       extensions.sort(function (a, b) {
         return a.name.localeCompare(b.name);
       });
