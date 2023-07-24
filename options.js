@@ -8,6 +8,15 @@ async function getServiceWorkerRegistration() {
   return registration ? registration.active : null;
 }
 
+// Function to update the active days checkboxes in the options UI
+function updateActiveDaysCheckboxes(activeDays) {
+  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  activeDaysCheckboxes.forEach(function (checkbox) {
+    const day = checkbox.getAttribute('value');
+    checkbox.checked = activeDays.includes(day);
+  });
+}
+
 // Function to populate dropdown select element with options
 function populateDropdown(selectId, start, end, defaultValue) {
   const select = document.getElementById(selectId);
@@ -59,13 +68,14 @@ function updateCheckedExtensions(extensionId, enabled) {
 
 // Function to update the options on the HTML document
 function updateDocumentOptions(options) {
+  console.log('Updating document options:', options); // Log the options received from storage
   const checkedExtensions = options.checkedExtensions || [];
   const startHour = options.startHour || 8;
   const startMinute = options.startMinute || 0;
   const startAmPm = options.startAmPm || 'AM';
-  const endHour = options.endHour || 16; // Default end hour if not found
-  const endMinute = options.endMinute || 0; // Default end minute if not found
-  const endAmPm = options.endAmPm || 'PM'; // Default end AM/PM if not found
+  const endHour = options.endHour || 16;
+  const endMinute = options.endMinute || 0;
+  const endAmPm = options.endAmPm || 'PM';
 
   // Convert the end hour to 12-hour format with AM/PM
   const displayEndHour = endHour % 12 || 12;
@@ -91,10 +101,19 @@ function updateDocumentOptions(options) {
   document.getElementById('endHour').value = displayEndHour;
   document.getElementById('endMinute').value = endMinute;
   document.getElementById('endAmPm').value = displayEndAmPm;
+
+  // Update the active days checkboxes
+  const activeDays = options.activeDays || config.defaultOptions.activeDays;
+  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  activeDaysCheckboxes.forEach(function (checkbox) {
+    const day = checkbox.getAttribute('data-day');
+    checkbox.checked = activeDays.includes(day);
+  });
 }
 
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
+  let data;
   const extensionList = document.getElementById('extensionList');
 
   if (extensionList) {
@@ -141,9 +160,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
 
+  // Update the active days checkboxes
+  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  activeDaysCheckboxes.forEach(function (checkbox) {
+    const day = checkbox.getAttribute('data-day');
+    checkbox.checked = false; // Uncheck all checkboxes initially
+  });
+
   // Get the options from Chrome storage and populate the dropdown select elements
   chrome.storage.local.get(
-    ['checkedExtensions', 'startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm'],
+    [
+      'checkedExtensions',
+      'startHour',
+      'startMinute',
+      'startAmPm',
+      'endHour',
+      'endMinute',
+      'endAmPm',
+      'activeDays',
+    ],
     function (data) {
       const checkedExtensions = data.checkedExtensions || [];
       checkedExtensions.forEach(function (extensionId) {
@@ -165,17 +200,23 @@ document.addEventListener('DOMContentLoaded', async function () {
       const endAmPm = data.endAmPm || config.defaultOptions.endAmPm;
 
       // Convert the end time to 12-hour format
-      const endAmPmValue = endHour >= 12 ? 'PM' : 'AM';
       const displayEndHour = endHour % 12 || 12;
 
-
-      // Use the updated 'endAmPmValue' here to set the endAmPm select element value
-      document.getElementById('endAmPm').value = endAmPmValue;
+      document.getElementById('endAmPm').value = endAmPm;
 
       // Update the 'endHour' select element value directly
-      document.getElementById('endHour').value = endAmPmValue === 'PM' ? displayEndHour : endHour % 12;
+      document.getElementById('endHour').value = endAmPm === 'PM' ? displayEndHour : endHour % 12;
       // Update the 'endMinute' select element value directly
       document.getElementById('endMinute').value = endMinute;
+
+      // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
+      const activeDays = Array.isArray(data.activeDays) ? data.activeDays : config.defaultOptions.activeDays;
+      activeDays.forEach(function (day) {
+        const checkbox = document.querySelector(`#activeDaysList input[value="${day}"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+      });
     }
   );
 
@@ -191,11 +232,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // Function to save options to Chrome storage
 function saveOptions() {
+  console.log('Save button clicked.'); // Check if the Save button click is detected
   // Get the checked extensions from the checkboxes
   const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
   const checkedExtensions = Array.from(extensionCheckboxes).map(function (checkbox) {
     return checkbox.getAttribute('data-extension-id');
   });
+
+  // Get the active days from the checkboxes
+  const activeDayCheckboxes = document.querySelectorAll('input[name="activeDays"]:checked');
+  const activeDays = Array.from(activeDayCheckboxes).map(function (checkbox) {
+    return checkbox.value;
+  });
+
+  // If no active days are checked, use the default active days (M-F)
+  const defaultActiveDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  if (activeDays.length === 0) {
+    activeDays.push(...defaultActiveDays);
+  }
 
   const startHour = parseInt(document.getElementById('startHour').value, 10);
   const startMinute = parseInt(document.getElementById('startMinute').value, 10);
@@ -227,6 +281,7 @@ function saveOptions() {
     endHour: endHour,
     endMinute: endMinute,
     endAmPm: endAmPm,
+    activeDays: activeDays,
   };
 
   // Update the end AM/PM field on the options UI with the original value
@@ -241,6 +296,9 @@ function saveOptions() {
       console.log('Values in Chrome storage after save:', data);
       // Update the values in the current HTML document
       updateDocumentOptions(data);
+
+      // Update the active days checkboxes after saving options
+      updateActiveDaysCheckboxes(activeDays);
 
       // Notify the background script about the options change
       chrome.runtime.sendMessage({ optionsUpdated: true });
@@ -262,7 +320,9 @@ function saveOptions() {
   setTimeout(() => {
     statusText.style.display = 'none';
   }, 5000);
+  console.log('Options saved.'); // Check if the options are saved successfully
 }
+
 
 // Add an event listener to receive messages from the background script
 chrome.runtime.onMessage.addListener(function (message) {

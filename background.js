@@ -1,5 +1,21 @@
 // background.js
 
+// Function to convert time to 24-hour format
+function convertTo24HourFormat(hour, amPm) {
+  if (amPm === 'PM' && hour !== 12) {
+    hour += 12;
+  } else if (amPm === 'AM' && hour === 12) {
+    hour = 0;
+  }
+  return hour;
+}
+
+function convertTo12HourFormat(hour) {
+  const amPm = hour >= 12 ? 'PM' : 'AM';
+  const formattedHour = hour % 12 || 12;
+  return { formattedHour, amPm };
+}
+
 // Function to enable/disable an extension using a promise-based wrapper
 function setExtensionState(extensionId, enabled) {
   if (extensionId === chrome.runtime.id) {
@@ -17,6 +33,8 @@ function setExtensionState(extensionId, enabled) {
     });
   });
 }
+
+
 
 // Function to get the total minutes since midnight from a time in 12-hour format (HH:mm AM/PM)
 function getTotalMinutesSinceMidnight(timeString) {
@@ -41,55 +59,67 @@ async function handleExtensionToggle() {
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
-    ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled'],
+    ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
     async function (data) {
       const startHour = data.startHour || 8; // Set a default start hour if not found
       const startMinute = data.startMinute || 0; // Set a default start minute if not found
       const startAmPm = data.startAmPm || 'AM'; // Set a default start AM/PM if not found
-      const endHour = data.endHour || 7; // Set a default end hour if not found
+      const endHour = data.endHour || 4; // Set a default end hour if not found
       const endMinute = data.endMinute || 0; // Set a default end minute if not found
       const endAmPm = data.endAmPm || 'PM'; // Set a default end AM/PM if not found
       const checkedExtensions = data.checkedExtensions || []; // Set an empty array if not found
+      const activeDays = data.activeDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const now = new Date();
 
       // Set extensionsEnabled to true if not found
       const extensionsEnabled = data.extensionsEnabled === undefined ? true : data.extensionsEnabled;
 
-      const now = new Date();
+      // Check if the current day of the week is within the active days
+      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const isDayActive = activeDays.includes(currentDay);
+
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
       // Convert start and end times to 24-hour format
-      const adjustedStartHour = startAmPm === 'AM' ? startHour : startHour + 12;
-      const adjustedEndHour = endAmPm === 'AM' ? endHour : endHour + 12;
+      const adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
+      const adjustedEndHour = convertTo24HourFormat(endHour, endAmPm);
 
       // Convert the adjusted end hour back to 12-hour format with AM/PM
-      const displayEndHour = adjustedEndHour % 12 || 12; // Use modulo 12 to get correct 12-hour format
-      const displayEndAmPm = adjustedEndHour >= 12 ? 'PM' : 'AM';
+      const { formattedHour: displayEndHour, amPm: displayEndAmPm } = convertTo12HourFormat(adjustedEndHour);
+
+      console.log('Active days:', activeDays);
+      console.log('Current day:', currentDay);
 
       console.log('Current time:', currentHour + ':' + currentMinute);
       console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
       console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
 
       // Convert start and end times to minutes since midnight
-      const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
-      const adjustedEndMinutes = getTotalMinutesSinceMidnight(`${displayEndHour}:${endMinute} ${displayEndAmPm}`);
-
-      // Convert the current time to minutes since midnight
+      const adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
+      const adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
       const currentMinutes = currentHour * 60 + currentMinute;
 
-      // Check if the current time is within the active time range
-        let isWithinActiveTimeRange;
-        if (adjustedStartMinutes <= adjustedEndMinutes) {
-          isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
-        } else {
-          // Handle the case when end time is after 1:00 PM (PM to AM transition)
-          isWithinActiveTimeRange = !(currentMinutes >= adjustedEndMinutes && currentMinutes < adjustedStartMinutes);
-        }
-
-      console.log('isWithinActiveTimeRange:', isWithinActiveTimeRange);
+      // Check if the current time is within the active time range and active days
+      let isWithinActiveTimeRange;
+      if (isDayActive && adjustedStartMinutes <= adjustedEndMinutes) {
+        isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+      } else if (isDayActive) {
+        // Handle the case when end time is after 1:00 PM (PM to AM transition)
+        isWithinActiveTimeRange = !(currentMinutes >= adjustedEndMinutes && currentMinutes < adjustedStartMinutes);
+      } else {
+        // Day is not active, disable all extensions
+        isWithinActiveTimeRange = false;
+      }
 
       // Get the current state of extensions
-      chrome.management.getAll(async function (extensions) {
+      chrome.management.getAll(function (extensions) {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          console.error('Error occurred while fetching extensions:', error);
+          return;
+        }
+
         for (const extension of extensions) {
           const extensionId = extension.id;
 
@@ -102,12 +132,13 @@ async function handleExtensionToggle() {
           if (checkedExtensions.includes(extensionId)) {
             // If within active time range, enable the extension; otherwise, disable it
             const isEnabled = isWithinActiveTimeRange && extensionsEnabled;
-            try {
-              await setExtensionState(extensionId, isEnabled);
-              console.log(`Extension ${extensionId} is ${isEnabled ? 'enabled' : 'disabled'}.`);
-            } catch (error) {
-              console.error(`Failed to set extension state for ${extensionId}:`, error);
-            }
+            setExtensionState(extensionId, isEnabled)
+              .then(() => {
+                console.log(`Extension ${extensionId} is ${isEnabled ? 'enabled' : 'disabled'}.`);
+              })
+              .catch((error) => {
+                console.error(`Failed to set extension state for ${extensionId}:`, error);
+              });
           }
         }
 
@@ -127,7 +158,6 @@ async function handleExtensionToggle() {
   );
 }
 
-
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(function (message) {
   if (message.optionsUpdated) {
@@ -138,6 +168,8 @@ chrome.runtime.onMessage.addListener(function (message) {
     });
   }
 });
+
+
 
 // Start the periodic toggling of the extension
 handleExtensionToggle();
