@@ -1,6 +1,6 @@
 # Extension Scheduler Readme
 
-The Extension Scheduler is a Chrome browser extension that allows users to schedule the automatic enabling and disabling of selected extensions based on a specified time range and active days. With this extension, you can manage and control the behavior of various Chrome extensions without having to manually enable or disable them.
+The Extension Scheduler is a Chrome & Edge browser extension that allows users to schedule the automatic enabling and disabling of selected extensions based on a specified time range and active days. With this extension, you can manage and control the behavior of various Chrome/Edge extensions without having to manually enable or disable them.
 
 ## Features
 
@@ -18,7 +18,7 @@ The Extension Scheduler is a Chrome browser extension that allows users to sched
 
 To get started using the Extension Scheduler, follow these simple steps:
 
-1. **Installation:** Download the extension from the Chrome Web Store and add it to your Chrome browser.
+1. **Installation:** Download the extension from the Chrome/Edge Web Store* and add it to your Chrome/Edge browser.
 
 2. **Options Configuration:** Open the options page by right-clicking the extension icon and selecting "Options." Here, you can customize the scheduling settings, select extensions, and set the active days and time range.
 
@@ -46,6 +46,8 @@ The Extension Scheduler is open-source software licensed under the [MIT License]
 
 ## Support
 
-If you encounter any issues or have questions regarding the Extension Scheduler, please don't hesitate to contact us through the support channels provided on the Chrome Web Store or our GitHub repository.
+If you encounter any issues or have questions regarding the Extension Scheduler, please don't hesitate to contact us through the support channels provided on the Chrome/Edge Web Store* or our GitHub repository.
 
-We hope you find the Extension Scheduler helpful in managing your Chrome extensions effectively and optimizing your browsing experience!
+We hope you find the Extension Scheduler helpful in managing your Chrome/Edge extensions effectively and optimizing your browsing experience!
+
+*: As of 7/25/2023, the Extension Scheduler is not yet available to download on the Chrome/Edge Web Store. To add the Extension Scheduler to your browser, download this code, then in your browser, navigate to the Extensions settings page, enable Developer mode, click on Load unpacked, then navigate to the folder you downloaded the code into and click Select Folder. The extension should load onto your browser.
