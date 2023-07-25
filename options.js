@@ -68,22 +68,13 @@ function updateCheckedExtensions(extensionId, enabled) {
 
 // Function to update the options on the HTML document
 function updateDocumentOptions(options) {
-  console.log('Updating document options:', options); // Log the options received from storage
   const checkedExtensions = options.checkedExtensions || [];
   const startHour = options.startHour || 8;
   const startMinute = options.startMinute || 0;
   const startAmPm = options.startAmPm || 'AM';
-  const endHour = options.endHour || 16;
+  const endHour = options.endHour || 4;
   const endMinute = options.endMinute || 0;
   const endAmPm = options.endAmPm || 'PM';
-
-  // Convert the end hour to 12-hour format with AM/PM
-  const displayEndHour = endHour % 12 || 12;
-  const displayEndAmPm = endHour >= 12 ? 'PM' : 'AM';
-
-  console.log('Updating document options:');
-  console.log('Start time:', startHour + ':' + startMinute + ' ' + startAmPm);
-  console.log('End time:', (endHour % 12) + ':' + endMinute + ' ' + (endHour >= 12 ? 'PM' : 'AM'));
 
   // Update the extension checkboxes
   const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]');
@@ -93,14 +84,14 @@ function updateDocumentOptions(options) {
   });
 
   // Update the start time fields
-  document.getElementById('startHour').value = startHour;
+  document.getElementById('startHour').value = startAmPm === 'PM' ? (startHour % 12) : startHour;
   document.getElementById('startMinute').value = startMinute;
   document.getElementById('startAmPm').value = startAmPm;
 
   // Update the end time fields with the correct AM/PM value
-  document.getElementById('endHour').value = displayEndHour;
+  document.getElementById('endHour').value = endHour;
   document.getElementById('endMinute').value = endMinute;
-  document.getElementById('endAmPm').value = displayEndAmPm;
+  document.getElementById('endAmPm').value = endAmPm;
 
   // Update the active days checkboxes
   const activeDays = options.activeDays || config.defaultOptions.activeDays;
@@ -232,7 +223,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // Function to save options to Chrome storage
 function saveOptions() {
-  console.log('Save button clicked.'); // Check if the Save button click is detected
   // Get the checked extensions from the checkboxes
   const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
   const checkedExtensions = Array.from(extensionCheckboxes).map(function (checkbox) {
@@ -259,20 +249,6 @@ function saveOptions() {
   let endMinute = parseInt(document.getElementById('endMinute').value, 10);
   let endAmPm = document.getElementById('endAmPm').value;
 
-  // Convert the end time to 24-hour format
-  if (endAmPm === 'PM' && endHour !== 12) {
-    endHour += 12;
-  } else if (endAmPm === 'AM' && endHour === 12) {
-    endHour = 0;
-  }
-
-  // Pad single-digit minute values with a leading zero
-  endMinute = endMinute.toString().padStart(2, '0');
-
-  console.log('Saving options:');
-  console.log('Start time:', startHour + ':' + startMinute + ' ' + startAmPm);
-  console.log('End time:', endHour + ':' + endMinute + ' ' + endAmPm);
-
   const options = {
     checkedExtensions: checkedExtensions,
     startHour: startAmPm === 'PM' ? (startHour % 12) : startHour,
@@ -284,12 +260,8 @@ function saveOptions() {
     activeDays: activeDays,
   };
 
-  // Update the end AM/PM field on the options UI with the original value
-  const originalEndAmPm = document.getElementById('endAmPm').value;
-  document.getElementById('endAmPm').value = originalEndAmPm;
 
   chrome.storage.local.set(options, function () {
-    console.log('Options saved.');
 
     // Log the values in Chrome storage after save
     chrome.storage.local.get(null, function (data) {
@@ -336,7 +308,7 @@ chrome.runtime.onMessage.addListener(function (message) {
 });
 
 function convertTo24HourFormat(hour, amPm) {
-  if (amPm === 'PM' && hour < 12) {
+  if (amPm === 'PM' && hour !== 12) {
     hour += 12;
   } else if (amPm === 'AM' && hour === 12) {
     hour = 0;

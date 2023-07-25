@@ -55,7 +55,8 @@ function getTotalMinutesSinceMidnight(timeString) {
 
 // Function to handle extension toggling based on time
 async function handleExtensionToggle() {
-  console.log('handleExtensionToggle function called.');
+  // Console Logs for debugging
+//   console.log('handleExtensionToggle function called.');
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -88,29 +89,35 @@ async function handleExtensionToggle() {
       // Convert the adjusted end hour back to 12-hour format with AM/PM
       const { formattedHour: displayEndHour, amPm: displayEndAmPm } = convertTo12HourFormat(adjustedEndHour);
 
-      console.log('Active days:', activeDays);
-      console.log('Current day:', currentDay);
-
-      console.log('Current time:', currentHour + ':' + currentMinute);
-      console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
-      console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
+      // Console Logs for debugging
+//       console.log('Active days:', activeDays);
+//       console.log('Current day:', currentDay);
+//
+//       console.log('Current time:', currentHour + ':' + currentMinute);
+//       console.log('Start time:', adjustedStartHour + ':' + startMinute + ' ' + startAmPm);
+//       console.log('End time:', displayEndHour + ':' + endMinute + ' ' + displayEndAmPm);
 
       // Convert start and end times to minutes since midnight
-      const adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
-      const adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
+      const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
+      let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
+
+      // Adjust the end time for the next day if it's before the start time
+      if (adjustedEndMinutes < adjustedStartMinutes) {
+        adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+      }
+
+
       const currentMinutes = currentHour * 60 + currentMinute;
 
       // Check if the current time is within the active time range and active days
-      let isWithinActiveTimeRange;
-      if (isDayActive && adjustedStartMinutes <= adjustedEndMinutes) {
-        isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
-      } else if (isDayActive) {
-        // Handle the case when end time is after 1:00 PM (PM to AM transition)
-        isWithinActiveTimeRange = !(currentMinutes >= adjustedEndMinutes && currentMinutes < adjustedStartMinutes);
-      } else {
-        // Day is not active, disable all extensions
-        isWithinActiveTimeRange = false;
-      }
+      const isWithinActiveTimeRange = isDayActive && currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+
+
+      // Console Logs for debugging
+//       console.log('Current time in minutes:', currentMinutes);
+//       console.log('Start time in minutes:', adjustedStartMinutes);
+//       console.log('End time in minutes:', adjustedEndMinutes);
+//       console.log('Is within active time range:', isWithinActiveTimeRange);
 
       // Get the current state of extensions
       chrome.management.getAll(function (extensions) {
@@ -134,7 +141,8 @@ async function handleExtensionToggle() {
             const isEnabled = isWithinActiveTimeRange && extensionsEnabled;
             setExtensionState(extensionId, isEnabled)
               .then(() => {
-                console.log(`Extension ${extensionId} is ${isEnabled ? 'enabled' : 'disabled'}.`);
+                // Console Log for debugging
+                //console.log(`Extension ${extensionId} is ${isEnabled ? 'enabled' : 'disabled'}.`);
               })
               .catch((error) => {
                 console.error(`Failed to set extension state for ${extensionId}:`, error);
@@ -144,7 +152,8 @@ async function handleExtensionToggle() {
 
         // Update the extensionsEnabled value in the Chrome storage
         chrome.storage.local.set({ extensionsEnabled: isWithinActiveTimeRange }, function () {
-          console.log('extensionsEnabled updated in storage:', isWithinActiveTimeRange);
+          // Console Log Times for debugging
+          //console.log('extensionsEnabled updated in storage:', isWithinActiveTimeRange);
         });
 
         // Change the extension icon based on the toggle state
