@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Extension Scheduler",
   "version": "1.0",
+  "description": "Schedule and toggle the behavior of selected extensions based on time and days.",
   "permissions": ["management", "storage"],
   "action": {
     "default_popup": "popup.html",
