@@ -307,17 +307,3 @@ chrome.runtime.onMessage.addListener(function (message) {
   }
 });
 
-function convertTo24HourFormat(hour, amPm) {
-  if (amPm === 'PM' && hour !== 12) {
-    hour += 12;
-  } else if (amPm === 'AM' && hour === 12) {
-    hour = 0;
-  }
-  return hour;
-}
-
-function convertTo12HourFormat(hour) {
-  const amPm = hour >= 12 ? 'PM' : 'AM';
-  const formattedHour = hour % 12 || 12;
-  return { formattedHour, amPm };
-}
