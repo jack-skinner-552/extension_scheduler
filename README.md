@@ -50,4 +50,4 @@ If you encounter any issues or have questions regarding the Extension Scheduler,
 
 We hope you find the Extension Scheduler helpful in managing your Chrome/Edge extensions effectively and optimizing your browsing experience!
 
-*: As of 7/25/2023, the Extension Scheduler is not yet available to download on the Chrome/Edge Web Store. To add the Extension Scheduler to your browser, download this code, then in your browser, navigate to the Extensions settings page, enable Developer mode, click on Load unpacked, then navigate to the folder you downloaded the code into and click Select Folder. The extension should load onto your browser.
+* - As of 7/25/2023, the Extension Scheduler is not yet available to download on the Chrome/Edge Web Store. To add the Extension Scheduler to your browser, download this code, then in your browser, navigate to the Extensions settings page, enable Developer mode, click on Load unpacked, then navigate to the folder you downloaded the code into and click Select Folder. The extension should load onto your browser.
