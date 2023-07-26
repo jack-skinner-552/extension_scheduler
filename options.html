@@ -6,11 +6,15 @@
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <h1>Extension Options</h1>
+<h1>Extension Options</h1>
 
-  <h2>Extensions</h2>
-  <ul id="extensionList"></ul>
-  <div id="activeDaysList">
+<div class="options-container">
+  <div class="extensions-container">
+    <h2>Extensions</h2>
+    <ul id="extensionList"></ul>
+  </div>
+
+  <div class="active-days-container">
     <h2>Active Days of the Week</h2>
     <label>
       <input type="checkbox" name="activeDays" value="Sunday"> Sunday
@@ -34,6 +38,10 @@
       <input type="checkbox" name="activeDays" value="Saturday"> Saturday
     </label>
   </div>
+</div>
+
+<div class="time-settings">
+  <div>
     <h2>Start Time</h2>
     <input type="number" id="startHour" min="1" max="12" value="8">
     <input type="number" id="startMinute" min="0" max="59" value="0">
@@ -52,8 +60,9 @@
       <option value="PM">PM</option>
     </select>
   </div>
+</div>
 
-  <button id="saveButton">Save</button>
-  <div id="statusText"></div>
+<button id="saveButton">Save</button>
+<div id="statusText"></div>
 </body>
 </html>
