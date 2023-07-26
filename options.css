@@ -27,6 +27,7 @@ li {
 .time-settings {
   display: flex;
   align-items: center;
+  margin-top: 20px;
 }
 
 label {
@@ -35,4 +36,17 @@ label {
 
 select {
   margin-right: 10px;
+}
+
+.options-container {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.extensions-container {
+  flex: 1;
+}
+
+.active-days-container {
+  flex: 1;
 }
