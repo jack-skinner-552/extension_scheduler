@@ -20,6 +20,17 @@ document.addEventListener('DOMContentLoaded', function () {
       chrome.storage.local.get('checkedExtensions', function (data) {
         const checkedExtensions = data.checkedExtensions || [];
 
+        // Create two containers for the two rows
+        const row1Container = document.createElement('div');
+        const row2Container = document.createElement('div');
+
+        // Assign class names to the containers for styling
+        row1Container.classList.add('icon-row');
+        row2Container.classList.add('icon-row');
+
+        // Keep track of the icons being added to each row
+        let count = 1;
+
         extensions.forEach(function (extension) {
           if (extension.type === 'extension' && extension.id !== chrome.runtime.id) {
             const icon = document.createElement('img');
@@ -33,9 +44,20 @@ document.addEventListener('DOMContentLoaded', function () {
               icon.style.display = 'none';
             }
 
-            extensionIconsContainer.appendChild(icon);
+            // Add the icon to the appropriate row container
+            if (count <= extensions.length / 2) {
+              row1Container.appendChild(icon);
+            } else {
+              row2Container.appendChild(icon);
+            }
+
+            count++;
           }
         });
+
+        // Add the row containers to the extensionIconsContainer
+        extensionIconsContainer.appendChild(row1Container);
+        extensionIconsContainer.appendChild(row2Container);
       });
     });
   });

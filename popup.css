@@ -21,3 +21,10 @@ li {
 #status {
   margin-bottom: 16px;
 }
+
+/* Styles for the icon rows */
+.icon-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
