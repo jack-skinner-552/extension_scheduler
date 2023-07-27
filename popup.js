@@ -13,51 +13,54 @@ document.addEventListener('DOMContentLoaded', function () {
     const extensionIconsContainer = document.getElementById('extensionIcons');
 
     chrome.management.getAll(function (extensions) {
-      extensions.sort(function (a, b) {
-        return a.name.localeCompare(b.name);
-      });
-
       chrome.storage.local.get('checkedExtensions', function (data) {
         const checkedExtensions = data.checkedExtensions || [];
 
-        // Create two containers for the two rows
-        const row1Container = document.createElement('div');
-        const row2Container = document.createElement('div');
-
-        // Assign class names to the containers for styling
-        row1Container.classList.add('icon-row');
-        row2Container.classList.add('icon-row');
-
-        // Keep track of the icons being added to each row
-        let count = 1;
-
-        extensions.forEach(function (extension) {
-          if (extension.type === 'extension' && extension.id !== chrome.runtime.id) {
-            const icon = document.createElement('img');
-            icon.src = extension.icons ? extension.icons[0].url : 'icon-default.png';
-            icon.classList.add('extension-icon');
-
-            // Show or hide the extension icon based on whether it is checked
-            if (checkedExtensions.includes(extension.id)) {
-              icon.style.display = 'block';
-            } else {
-              icon.style.display = 'none';
-            }
-
-            // Add the icon to the appropriate row container
-            if (count <= extensions.length / 2) {
-              row1Container.appendChild(icon);
-            } else {
-              row2Container.appendChild(icon);
-            }
-
-            count++;
-          }
+        // Filter the extensions to only include selected ones
+        const selectedExtensions = extensions.filter(function (extension) {
+          return (
+            extension.type === 'extension' &&
+            extension.id !== chrome.runtime.id &&
+            checkedExtensions.includes(extension.id)
+          );
         });
 
-        // Add the row containers to the extensionIconsContainer
-        extensionIconsContainer.appendChild(row1Container);
-        extensionIconsContainer.appendChild(row2Container);
+        // Sort the selected extensions by name
+        selectedExtensions.sort(function (a, b) {
+          return a.name.localeCompare(b.name);
+        });
+
+        // Define the maximum number of icons per row
+        const iconsPerRow = 5;
+
+        // Create a container for extension icons
+        const extensionIconsContainer = document.getElementById('extensionIcons');
+
+        let currentRowContainer = document.createElement('div');
+        currentRowContainer.classList.add('icon-row');
+
+        selectedExtensions.forEach(function (extension, index) {
+          const icon = document.createElement('img');
+          icon.src = extension.icons ? extension.icons[0].url : 'icon-default.png';
+          icon.classList.add('extension-icon');
+
+          // Show or hide the extension icon based on whether it is checked
+          icon.style.display = 'block';
+
+          if (index > 0 && index % iconsPerRow === 0) {
+            // Start a new row after every 'iconsPerRow' icons
+            extensionIconsContainer.appendChild(currentRowContainer);
+            currentRowContainer = document.createElement('div');
+            currentRowContainer.classList.add('icon-row');
+          }
+
+          currentRowContainer.appendChild(icon);
+        });
+
+        // Add the last row if it contains icons
+        if (currentRowContainer.childElementCount > 0) {
+          extensionIconsContainer.appendChild(currentRowContainer);
+        }
       });
     });
   });
