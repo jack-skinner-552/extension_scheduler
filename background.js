@@ -61,7 +61,7 @@ async function handleExtensionToggle() {
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
     ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
-    async function (data) {
+    function (data) {
       const startHour = data.startHour || 8; // Set a default start hour if not found
       const startMinute = data.startMinute || 0; // Set a default start minute if not found
       const startAmPm = data.startAmPm || 'AM'; // Set a default start AM/PM if not found
