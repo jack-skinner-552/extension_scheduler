@@ -10,7 +10,7 @@ async function getServiceWorkerRegistration() {
 
 // Function to update the active days checkboxes in the options UI
 function updateActiveDaysCheckboxes(activeDays) {
-  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
     checkbox.checked = activeDays.includes(day);
@@ -93,12 +93,21 @@ function updateDocumentOptions(options) {
   document.getElementById('endMinute').value = endMinute;
   document.getElementById('endAmPm').value = endAmPm;
 
-  // Update the active days checkboxes
+  // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
   const activeDays = options.activeDays || config.defaultOptions.activeDays;
   const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
-    const day = checkbox.getAttribute('data-day');
+    const day = checkbox.getAttribute('value');
     checkbox.checked = activeDays.includes(day);
+  });
+
+  // Additional code to set Monday to Friday checkboxes to checked by default
+  const defaultActiveDays = config.defaultOptions.activeDays;
+  defaultActiveDays.forEach(function (day) {
+    const checkbox = document.querySelector(`#activeDaysList input[value="${day}"]`);
+    if (checkbox && !activeDays.includes(day)) {
+      checkbox.checked = true;
+    }
   });
 }
 
@@ -152,75 +161,52 @@ document.addEventListener('DOMContentLoaded', async function () {
             checkbox.checked = isChecked;
           });
         });
+
+        // Get the options from Chrome storage and populate the dropdown select elements
+        chrome.storage.local.get(
+          [
+            'checkedExtensions',
+            'startHour',
+            'startMinute',
+            'startAmPm',
+            'endHour',
+            'endMinute',
+            'endAmPm',
+            'activeDays',
+          ],
+          function (data) {
+            const checkedExtensions = data.checkedExtensions || [];
+            checkedExtensions.forEach(function (extensionId) {
+              const checkbox = document.querySelector(`#extensionList input[data-extension-id="${extensionId}"]`);
+              if (checkbox) {
+                checkbox.checked = true;
+              }
+            });
+
+            // Populate dropdown select elements for time selection
+            populateDropdown('startHour', 1, 12, 8);
+            populateDropdown('startMinute', 0, 59, 0);
+            populateDropdown('endHour', 1, 12, 4);
+            populateDropdown('endMinute', 0, 59, 0);
+
+            // Update the values in the current HTML document
+            updateDocumentOptions(data);
+
+            // Additional code to set Monday to Friday checkboxes to checked by default
+            if (!data.activeDays || data.activeDays.length === 0) {
+              const defaultActiveDays = config.defaultOptions.activeDays;
+              defaultActiveDays.forEach(function (day) {
+                const checkbox = document.querySelector(`.active-days-container input[value="${day}"]`);
+                if (checkbox) {
+                  checkbox.checked = true;
+                }
+              });
+            }
+          }
+        );
       });
     });
   }
-
-  // Update the active days checkboxes
-  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
-  activeDaysCheckboxes.forEach(function (checkbox) {
-    const day = checkbox.getAttribute('data-day');
-    checkbox.checked = false; // Uncheck all checkboxes initially
-  });
-
-  // Get the options from Chrome storage and populate the dropdown select elements
-  chrome.storage.local.get(
-    [
-      'checkedExtensions',
-      'startHour',
-      'startMinute',
-      'startAmPm',
-      'endHour',
-      'endMinute',
-      'endAmPm',
-      'activeDays',
-    ],
-    function (data) {
-      const checkedExtensions = data.checkedExtensions || [];
-      checkedExtensions.forEach(function (extensionId) {
-        const checkbox = document.querySelector(`#extensionList input[data-extension-id="${extensionId}"]`);
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-      });
-
-      const startHour = data.startHour || config.defaultOptions.startHour;
-      const startMinute = data.startMinute || config.defaultOptions.startMinute;
-      const startAmPm = data.startAmPm || config.defaultOptions.startAmPm;
-      document.getElementById('startHour').value = startAmPm === 'PM' ? (startHour % 12) : startHour;
-      document.getElementById('startMinute').value = startMinute;
-      document.getElementById('startAmPm').value = startAmPm;
-
-      const endHour = data.endHour || config.defaultOptions.endHour;
-      const endMinute = data.endMinute || config.defaultOptions.endMinute;
-      const endAmPm = data.endAmPm || config.defaultOptions.endAmPm;
-
-      // Convert the end time to 12-hour format
-      const displayEndHour = endHour % 12 || 12;
-
-      document.getElementById('endAmPm').value = endAmPm;
-
-      // Update the 'endHour' select element value directly
-      document.getElementById('endHour').value = endAmPm === 'PM' ? displayEndHour : endHour % 12;
-      // Update the 'endMinute' select element value directly
-      document.getElementById('endMinute').value = endMinute;
-
-      // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
-      const activeDays = Array.isArray(data.activeDays) ? data.activeDays : config.defaultOptions.activeDays;
-      activeDays.forEach(function (day) {
-        const checkbox = document.querySelector(`#activeDaysList input[value="${day}"]`);
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-      });
-    }
-  );
-
-  // Populate dropdown select elements for time selection
-  populateDropdown('startHour', 1, 12, 8);
-  populateDropdown('startMinute', 0, 59, 0);
-  populateDropdown('endHour', 1, 12, 4);
-  populateDropdown('endMinute', 0, 59, 0);
 
   // Save options when the Save button is clicked
   document.getElementById('saveButton').addEventListener('click', saveOptions);
@@ -241,9 +227,8 @@ function saveOptions() {
   });
 
   // If no active days are checked, use the default active days (M-F)
-  const defaultActiveDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (activeDays.length === 0) {
-    activeDays.push(...defaultActiveDays);
+    activeDays.push(...config.defaultOptions.activeDays);
   }
 
   const startHour = parseInt(document.getElementById('startHour').value, 10);
