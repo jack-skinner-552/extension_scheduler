@@ -108,7 +108,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   const extensionList = document.getElementById('extensionList');
   const selectAllCheckbox = document.getElementById('selectAllCheckbox');
 
-
   if (extensionList && selectAllCheckbox) {
     // Get all extensions and sort them alphabetically
     chrome.management.getAll(function (extensions) {
@@ -130,11 +129,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             checkbox.type = 'checkbox';
             checkbox.checked = checkedExtensions.includes(extension.id);
             checkbox.setAttribute('data-extension-id', extension.id);
-            checkbox.addEventListener('change', function (event) {
-              const isChecked = event.target.checked;
-              setExtensionState(extension.id, isChecked);
-              updateCheckedExtensions(extension.id, isChecked);
-            });
             listItem.appendChild(checkbox);
 
             const icon = document.createElement('img');
@@ -156,9 +150,6 @@ document.addEventListener('DOMContentLoaded', async function () {
           const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]');
           extensionCheckboxes.forEach(function (checkbox) {
             checkbox.checked = isChecked;
-            const extensionId = checkbox.getAttribute('data-extension-id');
-            setExtensionState(extensionId, isChecked);
-            updateCheckedExtensions(extensionId, isChecked);
           });
         });
       });
