@@ -8,15 +8,23 @@ async function getServiceWorkerRegistration() {
   return registration ? registration.active : null;
 }
 
+// Function to convert time to 24-hour format
+function convertTo24HourFormat(hour, amPm) {
+  if (amPm === 'PM' && hour !== 12) {
+    hour += 12;
+  } else if (amPm === 'AM' && hour === 12) {
+    hour = 0;
+  }
+  return hour;
+}
+
 // Function to update the active days checkboxes in the options UI
 function updateActiveDaysCheckboxes(activeDays) {
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
-    console.log('day:', day);
     checkbox.checked = activeDays.includes(day);
   });
-  console.log('Active Days Checkboxes updated:', activeDays); // Add this line for debugging purposes
 }
 
 // Function to populate dropdown select element with options
@@ -101,11 +109,7 @@ function updateDocumentOptions(options) {
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
-    console.log('updateDocumentOptions day checkbox loop', day);
     checkbox.checked = activeDays.includes(day);
-
-    // Log the checkbox status at the end of the for loop
-    console.log(`Checkbox for ${day} is ${checkbox.checked ? 'checked' : 'unchecked'}.`);
   });
 
   console.log('Active Days updated:', activeDays); // Add this line for debugging purposes
@@ -244,6 +248,7 @@ function saveOptions() {
     activeDays.push(...config.defaultOptions.activeDays);
   }
 
+
   const startHour = parseInt(document.getElementById('startHour').value, 10);
   const startMinute = parseInt(document.getElementById('startMinute').value, 10);
   const startAmPm = document.getElementById('startAmPm').value;
@@ -251,6 +256,24 @@ function saveOptions() {
   let endHour = parseInt(document.getElementById('endHour').value, 10);
   let endMinute = parseInt(document.getElementById('endMinute').value, 10);
   let endAmPm = document.getElementById('endAmPm').value;
+
+  // Calculate isWithinActiveTimeRange based on the current time and options
+  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const currentHour = new Date().getHours();
+  const currentMinute = new Date().getMinutes();
+  const currentMinutes = currentHour * 60 + currentMinute;
+  const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
+  let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
+
+  // Adjust the end time for the next day if it's before the start time
+  if (adjustedEndMinutes < adjustedStartMinutes) {
+    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+  }
+
+  const isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+
+  // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
+  const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
 
   const options = {
     checkedExtensions: checkedExtensions,
@@ -261,6 +284,7 @@ function saveOptions() {
     endMinute: endMinute,
     endAmPm: endAmPm,
     activeDays: activeDays,
+    extensionsEnabled: extensionsEnabled
   };
 
   // Validate the End Time against the Start Time
