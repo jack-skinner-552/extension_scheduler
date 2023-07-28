@@ -13,8 +13,10 @@ function updateActiveDaysCheckboxes(activeDays) {
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
+    console.log('day:', day);
     checkbox.checked = activeDays.includes(day);
   });
+  console.log('Active Days Checkboxes updated:', activeDays); // Add this line for debugging purposes
 }
 
 // Function to populate dropdown select element with options
@@ -95,11 +97,18 @@ function updateDocumentOptions(options) {
 
   // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
   const activeDays = options.activeDays || config.defaultOptions.activeDays;
-  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  console.log('Active days:', activeDays);
+  const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
+    console.log('updateDocumentOptions day checkbox loop', day);
     checkbox.checked = activeDays.includes(day);
+
+    // Log the checkbox status at the end of the for loop
+    console.log(`Checkbox for ${day} is ${checkbox.checked ? 'checked' : 'unchecked'}.`);
   });
+
+  console.log('Active Days updated:', activeDays); // Add this line for debugging purposes
 
   // Additional code to set Monday to Friday checkboxes to checked by default
   const defaultActiveDays = config.defaultOptions.activeDays;
@@ -144,17 +153,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Update the values in the current HTML document
         updateDocumentOptions(data);
-
-        // Additional code to set Monday to Friday checkboxes to checked by default
-        if (!data.activeDays || data.activeDays.length === 0) {
-          const defaultActiveDays = config.defaultOptions.activeDays;
-          defaultActiveDays.forEach(function (day) {
-            const checkbox = document.querySelector(`.active-days-container input[value="${day}"]`);
-            if (checkbox) {
-              checkbox.checked = true;
-            }
-          });
-        }
 
         // Create a Promise to fetch the extensions using chrome.management.getAll
         const extensionsPromise = new Promise((resolve) => {
@@ -218,7 +216,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // Save options when the Save button is clicked
-  document.getElementById('saveButton').addEventListener('click', saveOptions);
+  document.getElementById('saveButton').addEventListener('click', function () {
+    console.log('Save button clicked.');
+    saveOptions();
+   });
 });
 
 
@@ -286,6 +287,7 @@ function saveOptions() {
       updateDocumentOptions(data);
 
       // Update the active days checkboxes after saving options
+      console.log('Active Days in Chrome storage:', data.activeDays); // Add this line for debugging purposes
       updateActiveDaysCheckboxes(activeDays);
 
       // Notify the background script about the options change
