@@ -71,7 +71,7 @@ function updateCheckedExtensions(extensionId, enabled) {
     }
 
     chrome.storage.local.set({ checkedExtensions: checkedExtensions }, function () {
-      console.log('Checked extensions updated.');
+      //console.log('Checked extensions updated.');
     });
   });
 }
@@ -105,14 +105,11 @@ function updateDocumentOptions(options) {
 
   // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
   const activeDays = options.activeDays || config.defaultOptions.activeDays;
-  console.log('Active days:', activeDays);
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
     checkbox.checked = activeDays.includes(day);
   });
-
-  console.log('Active Days updated:', activeDays); // Add this line for debugging purposes
 
   // Additional code to set Monday to Friday checkboxes to checked by default
   const defaultActiveDays = config.defaultOptions.activeDays;
@@ -126,7 +123,7 @@ function updateDocumentOptions(options) {
 
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
-  console.log('DOM content loaded.');
+  //console.log('DOM content loaded.');
   const extensionList = document.getElementById('extensionList');
   const selectAllCheckbox = document.getElementById('selectAll');
   const messageContainer = document.getElementById('messageContainer');
@@ -144,8 +141,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         'endMinute',
         'endAmPm',
         'activeDays',
+        'extensionsEnabled'
       ],
       function (data) {
+        console.log('Values in Chrome Storage:', data);
         // Get the list of checked extensions from Chrome storage
         const checkedExtensions = data.checkedExtensions || [];
 
@@ -163,11 +162,8 @@ document.addEventListener('DOMContentLoaded', async function () {
           chrome.management.getAll(resolve);
         });
 
-        console.log('Fetching extensions...');
-
         // Wait for the extensionsPromise to resolve with the extensions
         extensionsPromise.then(function (extensions) {
-          console.log('Extensions fetched:', extensions);
 
           // Filter and sort the extensions
           const validExtensions = extensions.filter(function (extension) {
@@ -221,7 +217,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // Save options when the Save button is clicked
   document.getElementById('saveButton').addEventListener('click', function () {
-    console.log('Save button clicked.');
     saveOptions();
    });
 });
@@ -311,7 +306,6 @@ function saveOptions() {
       updateDocumentOptions(data);
 
       // Update the active days checkboxes after saving options
-      console.log('Active Days in Chrome storage:', data.activeDays); // Add this line for debugging purposes
       updateActiveDaysCheckboxes(activeDays);
 
       // Notify the background script about the options change
@@ -334,7 +328,7 @@ function saveOptions() {
   setTimeout(() => {
     statusText.style.display = 'none';
   }, 5000);
-  console.log('Options saved.'); // Check if the options are saved successfully
+  //console.log('Options saved.'); // Check if the options are saved successfully
 }
 
 
