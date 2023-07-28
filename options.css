@@ -24,10 +24,15 @@ li {
   margin-right: 10px;
 }
 
-.time-settings {
+.time-settings-container {
   display: flex;
   align-items: center;
   margin-top: 20px;
+}
+
+.time-settings-container > .time-settings,
+.time-settings-container > .save-button-container {
+  margin-right: 20px;
 }
 
 label {
@@ -40,6 +45,7 @@ select {
 
 .options-container {
   display: flex;
+  flex-wrap: wrap; /* Added flex-wrap property to handle wrapping */
   margin-bottom: 20px;
 }
 
@@ -47,6 +53,18 @@ select {
   flex: 1;
 }
 
+.time-active-container {
+  flex: 1;
+}
+
 .active-days-container {
   flex: 1;
 }
+
+.time-settings {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+}
+
+
