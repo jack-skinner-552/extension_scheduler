@@ -283,19 +283,19 @@ function saveOptions() {
   };
 
   // Validate the End Time against the Start Time
-  if (
-    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
-    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
-  ) {
-    const statusText = document.getElementById('statusText');
-    statusText.textContent = 'Error: End Time cannot be set earlier than or equal to Start Time.';
-    statusText.style.display = 'block';
-    // Clear the prompt after 5 seconds
-    setTimeout(() => {
-      statusText.style.display = 'none';
-    }, 5000);
-    return; // Abort saving options if the validation fails
-  }
+//  if (
+//    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
+//    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
+//  ) {
+//    const statusText = document.getElementById('statusText');
+//    statusText.textContent = 'Error: End Time cannot be set earlier than or equal to Start Time.';
+//    statusText.style.display = 'block';
+//    // Clear the prompt after 5 seconds
+//    setTimeout(() => {
+//      statusText.style.display = 'none';
+//    }, 5000);
+//    return; // Abort saving options if the validation fails
+//  }
 
   chrome.storage.local.set(options, function () {
 
