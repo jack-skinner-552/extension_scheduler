@@ -8,6 +8,16 @@ async function getServiceWorkerRegistration() {
   return registration ? registration.active : null;
 }
 
+// Function to convert time to 24-hour format
+function convertTo24HourFormat(hour, amPm) {
+  if (amPm === 'PM' && hour !== 12) {
+    hour += 12;
+  } else if (amPm === 'AM' && hour === 12) {
+    hour = 0;
+  }
+  return hour;
+}
+
 // Function to update the active days checkboxes in the options UI
 function updateActiveDaysCheckboxes(activeDays) {
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
@@ -61,7 +71,7 @@ function updateCheckedExtensions(extensionId, enabled) {
     }
 
     chrome.storage.local.set({ checkedExtensions: checkedExtensions }, function () {
-      console.log('Checked extensions updated.');
+      //console.log('Checked extensions updated.');
     });
   });
 }
@@ -95,7 +105,7 @@ function updateDocumentOptions(options) {
 
   // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
   const activeDays = options.activeDays || config.defaultOptions.activeDays;
-  const activeDaysCheckboxes = document.querySelectorAll('#activeDaysList input[type="checkbox"]');
+  const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
     checkbox.checked = activeDays.includes(day);
@@ -113,7 +123,7 @@ function updateDocumentOptions(options) {
 
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
-  console.log('DOM content loaded.');
+  //console.log('DOM content loaded.');
   const extensionList = document.getElementById('extensionList');
   const selectAllCheckbox = document.getElementById('selectAll');
   const messageContainer = document.getElementById('messageContainer');
@@ -131,8 +141,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         'endMinute',
         'endAmPm',
         'activeDays',
+        'extensionsEnabled'
       ],
       function (data) {
+        console.log('Values in Chrome Storage:', data);
         // Get the list of checked extensions from Chrome storage
         const checkedExtensions = data.checkedExtensions || [];
 
@@ -145,27 +157,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Update the values in the current HTML document
         updateDocumentOptions(data);
 
-        // Additional code to set Monday to Friday checkboxes to checked by default
-        if (!data.activeDays || data.activeDays.length === 0) {
-          const defaultActiveDays = config.defaultOptions.activeDays;
-          defaultActiveDays.forEach(function (day) {
-            const checkbox = document.querySelector(`.active-days-container input[value="${day}"]`);
-            if (checkbox) {
-              checkbox.checked = true;
-            }
-          });
-        }
-
         // Create a Promise to fetch the extensions using chrome.management.getAll
         const extensionsPromise = new Promise((resolve) => {
           chrome.management.getAll(resolve);
         });
 
-        console.log('Fetching extensions...');
-
         // Wait for the extensionsPromise to resolve with the extensions
         extensionsPromise.then(function (extensions) {
-          console.log('Extensions fetched:', extensions);
 
           // Filter and sort the extensions
           const validExtensions = extensions.filter(function (extension) {
@@ -218,7 +216,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // Save options when the Save button is clicked
-  document.getElementById('saveButton').addEventListener('click', saveOptions);
+  document.getElementById('saveButton').addEventListener('click', function () {
+    saveOptions();
+   });
 });
 
 
@@ -243,6 +243,7 @@ function saveOptions() {
     activeDays.push(...config.defaultOptions.activeDays);
   }
 
+
   const startHour = parseInt(document.getElementById('startHour').value, 10);
   const startMinute = parseInt(document.getElementById('startMinute').value, 10);
   const startAmPm = document.getElementById('startAmPm').value;
@@ -250,6 +251,24 @@ function saveOptions() {
   let endHour = parseInt(document.getElementById('endHour').value, 10);
   let endMinute = parseInt(document.getElementById('endMinute').value, 10);
   let endAmPm = document.getElementById('endAmPm').value;
+
+  // Calculate isWithinActiveTimeRange based on the current time and options
+  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const currentHour = new Date().getHours();
+  const currentMinute = new Date().getMinutes();
+  const currentMinutes = currentHour * 60 + currentMinute;
+  const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
+  let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
+
+  // Adjust the end time for the next day if it's before the start time
+  if (adjustedEndMinutes < adjustedStartMinutes) {
+    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+  }
+
+  const isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+
+  // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
+  const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
 
   const options = {
     checkedExtensions: checkedExtensions,
@@ -260,6 +279,7 @@ function saveOptions() {
     endMinute: endMinute,
     endAmPm: endAmPm,
     activeDays: activeDays,
+    extensionsEnabled: extensionsEnabled
   };
 
   // Validate the End Time against the Start Time
@@ -308,7 +328,7 @@ function saveOptions() {
   setTimeout(() => {
     statusText.style.display = 'none';
   }, 5000);
-  console.log('Options saved.'); // Check if the options are saved successfully
+  //console.log('Options saved.'); // Check if the options are saved successfully
 }
 
 
