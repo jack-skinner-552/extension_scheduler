@@ -10,6 +10,7 @@ function convertTo24HourFormat(hour, amPm) {
   return hour;
 }
 
+// Function to convert time to 12-hour format
 function convertTo12HourFormat(hour) {
   const amPm = hour >= 12 ? 'PM' : 'AM';
   const formattedHour = hour % 12 || 12;
@@ -169,10 +170,44 @@ async function handleExtensionToggle() {
   chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
 }
 
+// Function to schedule the alarms for the start and end times
+function scheduleAlarmsForStartAndEndTimes(data) {
+  const startHour = data.startHour || 8; // Set a default start hour if not found
+  const startMinute = data.startMinute || 0; // Set a default start minute if not found
+  const startAmPm = data.startAmPm || 'AM'; // Set a default start AM/PM if not found
+  const endHour = data.endHour || 4; // Set a default end hour if not found
+  const endMinute = data.endMinute || 0; // Set a default end minute if not found
+  const endAmPm = data.endAmPm || 'PM'; // Set a default end AM/PM if not found
+
+  // Convert start and end times to 24-hour format
+  const adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
+  const adjustedEndHour = convertTo24HourFormat(endHour, endAmPm);
+
+  // Convert start and end times to minutes since midnight
+  const adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
+  let adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
+
+  // Adjust the end time for the next day if it's before the start time
+  if (adjustedEndMinutes < adjustedStartMinutes) {
+    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+  }
+
+  // Schedule the alarm for the start time
+  const startDateTime = new Date();
+  startDateTime.setHours(adjustedStartHour, startMinute, 0, 0);
+  const startTimeStamp = startDateTime.getTime();
+  chrome.alarms.create('extensionToggleAlarmStart', { when: startTimeStamp });
+
+  // Schedule the alarm for the end time
+  const endDateTime = new Date();
+  endDateTime.setHours(adjustedEndHour, endMinute, 0, 0);
+  const endTimeStamp = endDateTime.getTime();
+  chrome.alarms.create('extensionToggleAlarmEnd', { when: endTimeStamp });
+}
 
 // Add an event listener for alarms
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'extensionToggleAlarm') {
+  if (alarm.name === 'extensionToggleAlarmStart' || alarm.name === 'extensionToggleAlarmEnd') {
     handleExtensionToggle();
   }
 });
@@ -183,6 +218,10 @@ chrome.runtime.onMessage.addListener(function (message) {
     // The options page notified about the options change
     // Let's update the extension's behavior accordingly
     chrome.storage.local.get(null, function (data) {
+      // Schedule alarms for the updated start and end times
+      scheduleAlarmsForStartAndEndTimes(data);
+
+      // Trigger the extension toggle based on the new settings
       handleExtensionToggle(data);
     });
   }
@@ -192,10 +231,10 @@ chrome.runtime.onMessage.addListener(function (message) {
 chrome.storage.local.get(
   ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
   function (data) {
+    // Schedule the initial alarms for start and end times
+    scheduleAlarmsForStartAndEndTimes(data);
+
     // Start the periodic toggling of the extension
     handleExtensionToggle(data);
-
-    // Schedule the initial toggle using the Alarm API
-    chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: 0 });
   }
 );
