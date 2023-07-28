@@ -160,12 +160,22 @@ async function handleExtensionToggle() {
         const iconPath = isWithinActiveTimeRange ? 'icon-on.png' : 'icon-off.png';
         chrome.action.setIcon({ path: iconPath });
 
-        // Schedule the next toggle after a delay of 30 seconds
-        setTimeout(handleExtensionToggle, 30000);
+
       });
     }
   );
+  // Schedule the next toggle using the Alarm API
+  const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
+  chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
 }
+
+
+// Add an event listener for alarms
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'extensionToggleAlarm') {
+    handleExtensionToggle();
+  }
+});
 
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(function (message) {
@@ -178,7 +188,14 @@ chrome.runtime.onMessage.addListener(function (message) {
   }
 });
 
+// Retrieve the start and end times from the Chrome storage
+chrome.storage.local.get(
+  ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
+  function (data) {
+    // Start the periodic toggling of the extension
+    handleExtensionToggle(data);
 
-
-// Start the periodic toggling of the extension
-handleExtensionToggle();
+    // Schedule the initial toggle using the Alarm API
+    chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: 0 });
+  }
+);
