@@ -12,8 +12,10 @@ async function getServiceWorkerRegistration() {
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
     hour += 12;
-  } else if (amPm === 'AM' && hour === 12) {
-    hour = 0;
+  } else if (amPm === 'AM') {
+    if (hour === 12) {
+      hour = 0; // Special case for 12:00 AM
+    }
   }
   return hour;
 }
@@ -38,7 +40,13 @@ function populateDropdown(selectId, start, end, defaultValue) {
     option.textContent = value;
     select.appendChild(option);
   }
-  select.value = defaultValue;
+
+  // Handle special case for '12 PM'
+  if (defaultValue === 12) {
+    select.value = '12';
+  } else {
+    select.value = defaultValue;
+  }
 }
 
 // Function to enable/disable an extension using a promise-based wrapper
@@ -94,7 +102,7 @@ function updateDocumentOptions(options) {
   });
 
   // Update the start time fields
-  document.getElementById('startHour').value = startAmPm === 'PM' ? (startHour % 12) : startHour;
+  document.getElementById('startHour').value = startHour;
   document.getElementById('startMinute').value = startMinute;
   document.getElementById('startAmPm').value = startAmPm;
 
@@ -261,18 +269,23 @@ function saveOptions() {
   let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
 
   // Adjust the end time for the next day if it's before the start time
-  if (adjustedEndMinutes < adjustedStartMinutes) {
-    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
-  }
+//  if (adjustedEndMinutes < adjustedStartMinutes) {
+//    adjustedEndMinutes -= 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+//  }
 
-  const isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+  console.log("currentMinutes:", currentMinutes);
+  console.log("adjustedStartMinutes:", adjustedStartMinutes);
+  console.log("adjustedEndMinutes:", adjustedEndMinutes)
+
+  const isWithinActiveTimeRange = (currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes) ||
+    (adjustedEndMinutes < adjustedStartMinutes && currentMinutes < adjustedEndMinutes);
 
   // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
   const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
 
   const options = {
     checkedExtensions: checkedExtensions,
-    startHour: startAmPm === 'PM' ? (startHour % 12) : startHour,
+    startHour: startHour,
     startMinute: startMinute,
     startAmPm: startAmPm,
     endHour: endHour,
@@ -283,6 +296,20 @@ function saveOptions() {
   };
 
   // Validate the End Time against the Start Time
+ if (
+   ((startHour === endHour) && (startMinute === endMinute) && (startAmPm === endAmPm)) // If Start Time is same as End Time
+  ){
+   const statusText = document.getElementById('statusText');
+   statusText.textContent = 'Error: End Time cannot the same as Start Time.';
+   statusText.style.display = 'block';
+   // Clear the prompt after 5 seconds
+   setTimeout(() => {
+     statusText.style.display = 'none';
+   }, 5000);
+   return; // Abort saving options if the validation fails
+ } else if (startHour){
+
+ }
 //  if (
 //    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
 //    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
