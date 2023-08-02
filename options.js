@@ -260,6 +260,15 @@ function saveOptions() {
   let endMinute = parseInt(document.getElementById('endMinute').value, 10);
   let endAmPm = document.getElementById('endAmPm').value;
 
+  // Store the current values as previously saved values
+  const previousStartHour = startHour;
+  const previousStartMinute = startMinute;
+  const previousStartAmPm = startAmPm;
+
+  const previousEndHour = endHour;
+  const previousEndMinute = endMinute;
+  const previousEndAmPm = endAmPm;
+
   // Calculate isWithinActiveTimeRange based on the current time and options
   const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const currentHour = new Date().getHours();
@@ -296,20 +305,35 @@ function saveOptions() {
   };
 
   // Validate the End Time against the Start Time
- if (
-   ((startHour === endHour) && (startMinute === endMinute) && (startAmPm === endAmPm)) // If Start Time is same as End Time
-  ){
-   const statusText = document.getElementById('statusText');
-   statusText.textContent = 'Error: End Time cannot the same as Start Time.';
-   statusText.style.display = 'block';
-   // Clear the prompt after 5 seconds
-   setTimeout(() => {
-     statusText.style.display = 'none';
-   }, 5000);
-   return; // Abort saving options if the validation fails
- } else if (startHour){
+  if (
+    ((startHour === endHour) && (startMinute === endMinute) && (startAmPm === endAmPm)) // If Start Time is same as End Time
+  ) {
+    const statusText = document.getElementById('statusText');
+    statusText.textContent = 'Error: End Time cannot be the same as Start Time.';
+    statusText.style.display = 'block';
+    // Clear the prompt after 5 seconds
+    setTimeout(() => {statusText.style.display = 'none';}, 5000);
+    return; // Abort saving options if the validation fails
+  } else if ((startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
+    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
+  ) {
 
- }
+
+    if (window.confirm(`Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.\n Are you sure that's what you meant to do?`) === false) {
+      // If the user clicks "Cancel" in the confirmation dialog, set the input fields back to the previously saved values
+//       document.getElementById('startHour').value = previousStartHour;
+//       document.getElementById('startMinute').value = previousStartMinute;
+//       document.getElementById('startAmPm').value = previousStartAmPm;
+//
+//       document.getElementById('endHour').value = previousEndHour;
+//       document.getElementById('endMinute').value = previousEndMinute;
+//       document.getElementById('endAmPm').value = previousEndAmPm;
+
+      return;
+    }
+  }
+
+
 //  if (
 //    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
 //    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
