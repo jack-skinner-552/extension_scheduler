@@ -10,7 +10,7 @@ const config = {
     endAmPm: 'PM',
     checkedExtensions: [],
     extensionsEnabled: true,
-    activeDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], // Added default active days
+    activeDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
   },
 };
 
