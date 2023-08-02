@@ -57,9 +57,10 @@ function getTotalMinutesSinceMidnight(timeString) {
 }
 
 // Function to handle extension toggling based on time
-async function handleExtensionToggle() {
+async function handleExtensionToggle(triggeredByAlarm = false) {
+  const timestamp1= new Date().toLocaleString();
   // Console Logs for debugging
-   console.log('handleExtensionToggle function called.');
+   console.log(`[${timestamp1}]handleExtensionToggle function called.`);
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -156,18 +157,20 @@ async function handleExtensionToggle() {
         });
 
         // Change the extension icon based on the toggle state
-        const iconPath = isWithinActiveTimeRange ? 'icon-on.png' : 'icon-off.png';
+        const iconPath = extensionsEnabled ? 'icon-on.png' : 'icon-off.png';
         chrome.action.setIcon({ path: iconPath });
-
-        console.log("Options after background toggle:", data);
+        const timestamp2 = new Date().toLocaleString();
+        console.log(`[${timestamp2}] Options after background toggle:`, data);
 
 
       });
     }
   );
-  // Schedule the next toggle using the Alarm API
-  const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
-  chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
+  // Schedule the next toggle using the Alarm API only if it wasn't triggered by an alarm
+  if (!triggeredByAlarm) {
+    const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
+    chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
+  }
 }
 
 // Function to schedule the alarms for the start and end times
@@ -203,7 +206,7 @@ function scheduleAlarmsForStartAndEndTimes(data) {
 // Add an event listener for alarms
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'extensionToggleAlarmStart' || alarm.name === 'extensionToggleAlarmEnd') {
-    handleExtensionToggle();
+    handleExtensionToggle(true);
   }
 });
 
@@ -217,7 +220,7 @@ chrome.runtime.onMessage.addListener(function (message) {
       scheduleAlarmsForStartAndEndTimes(data);
 
       // Trigger the extension toggle based on the new settings
-      handleExtensionToggle(data);
+      handleExtensionToggle();
     });
   }
 });

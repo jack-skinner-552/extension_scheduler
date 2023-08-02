@@ -8,6 +8,22 @@ async function getServiceWorkerRegistration() {
   return registration ? registration.active : null;
 }
 
+function getTotalMinutesSinceMidnight(timeString) {
+  const [time, amPm] = timeString.split(' ');
+  const [hours, minutes] = time.split(':').map(Number);
+
+  // Adjust the hours to 24-hour format based on AM/PM
+  let adjustedHours = hours;
+  if (amPm === 'PM' && hours !== 12) {
+    adjustedHours += 12;
+  } else if (amPm === 'AM' && hours === 12) {
+    adjustedHours = 0;
+  }
+
+  const totalMinutes = adjustedHours * 60 + minutes;
+  return totalMinutes;
+}
+
 // Function to convert time to 24-hour format
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
@@ -18,13 +34,6 @@ function convertTo24HourFormat(hour, amPm) {
     }
   }
   return hour;
-}
-
-// Function to add leading zeros to single-digit numbers
-function leadingZeros(input) {
-  if (!isNaN(input.value) && input.value.length === 1) {
-    input.value = '0' + input.value;
-  }
 }
 
 function padWithLeadingZero(number) {
@@ -82,41 +91,6 @@ function populateDropdown(selectId, start, end, defaultValue) {
   } else {
     select.value = String(defaultValue).padStart(2, '0');;
   }
-}
-
-// Function to enable/disable an extension using a promise-based wrapper
-function setExtensionState(extensionId, enabled) {
-  return new Promise((resolve, reject) => {
-    chrome.management.setEnabled(extensionId, enabled, () => {
-      if (chrome.runtime.lastError) {
-        reject(`Failed to set extension state for ${extensionId}: ${chrome.runtime.lastError.message}`);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
-// Function to update checked extensions in Chrome storage
-function updateCheckedExtensions(extensionId, enabled) {
-  chrome.storage.local.get('checkedExtensions', function (data) {
-    const checkedExtensions = data.checkedExtensions || [];
-
-    if (enabled) {
-      if (!checkedExtensions.includes(extensionId)) {
-        checkedExtensions.push(extensionId);
-      }
-    } else {
-      const index = checkedExtensions.indexOf(extensionId);
-      if (index !== -1) {
-        checkedExtensions.splice(index, 1);
-      }
-    }
-
-    chrome.storage.local.set({ checkedExtensions: checkedExtensions }, function () {
-      //console.log('Checked extensions updated.');
-    });
-  });
 }
 
 // Function to update the options on the HTML document
@@ -311,15 +285,24 @@ function saveOptions() {
   const currentHour = new Date().getHours();
   const currentMinute = new Date().getMinutes();
   const currentMinutes = currentHour * 60 + currentMinute;
-  const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
-  let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
+  const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
+  let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
 
   console.log("currentMinutes:", currentMinutes);
   console.log("adjustedStartMinutes:", adjustedStartMinutes);
   console.log("adjustedEndMinutes:", adjustedEndMinutes)
 
-  const isWithinActiveTimeRange = (currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes) ||
-    (adjustedEndMinutes < adjustedStartMinutes && currentMinutes < adjustedEndMinutes);
+  let isWithinActiveTimeRange = false;
+
+  if (adjustedEndMinutes < adjustedStartMinutes) {
+    // Two time ranges: from start time to midnight and from midnight to end time
+    isWithinActiveTimeRange =
+      (currentMinutes >= adjustedStartMinutes && currentMinutes <= 24 * 60) || // From start time to midnight
+      (currentMinutes >= 0 && currentMinutes < adjustedEndMinutes); // From midnight to end time
+  } else {
+    // Normal time range
+    isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+  }
 
   // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
   const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
@@ -346,8 +329,19 @@ function saveOptions() {
     // Clear the prompt after 5 seconds
     setTimeout(() => {statusText.style.display = 'none';}, 5000);
     return; // Abort saving options if the validation fails
-  } else if ((startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
-    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
+  } else if (
+    // If Start Time is PM and End Time is AM
+    ((startAmPm === 'PM' && endAmPm === 'AM') ||
+    // If both Start Time and End Time are PM, and End Hour is less than Start Hour (except when Start Hour is 12)
+    ((endAmPm === 'PM' && startAmPm === 'PM') && (endHour < startHour) && (startHour != 12)) ||
+    // If both Start Time and End Time are AM, and End Hour is less than Start Hour (except when Start Hour is 12)
+    ((endAmPm === 'AM' && startAmPm === 'AM') && (endHour < startHour) && (startHour != 12)) ||
+    // If both Start Time and End Time are PM, and End Hour is equal to Start Hour, and End Minute is less than or equal to Start Minute
+    ((endAmPm === 'PM' && startAmPm === 'PM') && (endHour === startHour) && (endMinute <= startMinute)) ||
+    // If both Start Time and End Time are AM, and End Hour is equal to Start Hour, and End Minute is less than or equal to Start Minute
+    ((endAmPm === 'AM' && startAmPm === 'AM') && (endHour === startHour) && (endMinute <= startMinute)) ||
+    // If Start Time is PM and End Time is AM, and End Hour is 12, and either (Start Hour is 12 and End Minute is less than Start Minute) or Start Hour is not 12
+    ((endAmPm === 'AM' && startAmPm === 'PM') && (endHour === 12) && ((startHour === 12) && (endMinute < startMinute)) || (startHour != 12)))
   ) {
 
     if (window.confirm(
