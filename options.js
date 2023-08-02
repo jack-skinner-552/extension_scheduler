@@ -20,6 +20,41 @@ function convertTo24HourFormat(hour, amPm) {
   return hour;
 }
 
+// Function to add leading zeros to single-digit numbers
+function leadingZeros(input) {
+  if (!isNaN(input.value) && input.value.length === 1) {
+    input.value = '0' + input.value;
+  }
+}
+
+function padWithLeadingZero(number) {
+  return number.toString().padStart(2, '0');
+}
+
+// Event listeners to handle custom arrow buttons for number inputs
+function addArrowButtonListeners() {
+  const arrowButtons = document.querySelectorAll('.arrow-button');
+  arrowButtons.forEach((button) => {
+    button.addEventListener('click', handleArrowButtonClick);
+  });
+}
+
+function handleArrowButtonClick(event) {
+  const button = event.target;
+  const timeContainer = button.closest('.time-input');
+  const inputField = timeContainer.querySelector('input[type="number"]');
+  const step = parseInt(inputField.step) || 1;
+
+  if (button.id.endsWith('Increment')) {
+    inputField.stepUp(step);
+  } else if (button.id.endsWith('Decrement')) {
+    inputField.stepDown(step);
+  }
+
+  // Add leading zero if the value is a single digit
+  inputField.value = padWithLeadingZero(inputField.value);
+}
+
 // Function to update the active days checkboxes in the options UI
 function updateActiveDaysCheckboxes(activeDays) {
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
@@ -45,7 +80,7 @@ function populateDropdown(selectId, start, end, defaultValue) {
   if (defaultValue === 12) {
     select.value = '12';
   } else {
-    select.value = defaultValue;
+    select.value = String(defaultValue).padStart(2, '0');;
   }
 }
 
@@ -87,11 +122,11 @@ function updateCheckedExtensions(extensionId, enabled) {
 // Function to update the options on the HTML document
 function updateDocumentOptions(options) {
   const checkedExtensions = options.checkedExtensions || [];
-  const startHour = options.startHour || 8;
-  const startMinute = options.startMinute || 0;
+  const startHour = options.startHour || '08';
+  const startMinute = options.startMinute || '00';
   const startAmPm = options.startAmPm || 'AM';
-  const endHour = options.endHour || 4;
-  const endMinute = options.endMinute || 0;
+  const endHour = options.endHour || '04';
+  const endMinute = options.endMinute || '00';
   const endAmPm = options.endAmPm || 'PM';
 
   // Update the extension checkboxes
@@ -157,13 +192,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         const checkedExtensions = data.checkedExtensions || [];
 
         // Populate dropdown select elements for time selection
-        populateDropdown('startHour', 1, 12, data.startHour || 8);
-        populateDropdown('startMinute', 0, 59, data.startMinute || 0);
-        populateDropdown('endHour', 1, 12, data.endHour || 4);
-        populateDropdown('endMinute', 0, 59, data.endMinute || 0);
+        populateDropdown('startHour', '01', '12', data.startHour || '08');
+        populateDropdown('startMinute', '00', '59', data.startMinute || '00');
+        populateDropdown('endHour', '01', '12', data.endHour || '04');
+        populateDropdown('endMinute', '00', '59', data.endMinute || '00');
 
         // Update the values in the current HTML document
         updateDocumentOptions(data);
+
+        addArrowButtonListeners();
 
         // Create a Promise to fetch the extensions using chrome.management.getAll
         const extensionsPromise = new Promise((resolve) => {
@@ -252,12 +289,12 @@ function saveOptions() {
   }
 
 
-  const startHour = parseInt(document.getElementById('startHour').value, 10);
-  const startMinute = parseInt(document.getElementById('startMinute').value, 10);
+  const startHour = document.getElementById('startHour').value;
+  const startMinute = document.getElementById('startMinute').value;
   const startAmPm = document.getElementById('startAmPm').value;
 
-  let endHour = parseInt(document.getElementById('endHour').value, 10);
-  let endMinute = parseInt(document.getElementById('endMinute').value, 10);
+  let endHour = document.getElementById('endHour').value;
+  let endMinute = document.getElementById('endMinute').value;
   let endAmPm = document.getElementById('endAmPm').value;
 
   // Store the current values as previously saved values

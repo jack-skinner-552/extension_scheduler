@@ -9,6 +9,7 @@
 </head>
 <body>
 <h1>Extension Options</h1>
+<hr>
 
 <div class="options-container">
     <div class="extensions-container">
@@ -49,26 +50,56 @@
             </label>
         </div>
 
+
+
         <div class="time-settings-container">
             <div class="time-settings">
                 <div>
                     <h2>Start Time</h2>
-                    <input type="number" id="startHour" min="1" max="12" value="8">
-                    <input type="number" id="startMinute" min="0" max="59" value="0">
-                    <select id="startAmPm">
-                        <option value="AM">AM</option>
-                        <option value="PM">PM</option>
-                    </select>
+                    <div class="time-container">
+                        <div class="time-input">
+                            <input type="number" id="startHour" min="1" max="12" value="08">
+                            <div class="arrow-container">
+                                <button class="arrow-button" id="startHourIncrement">&#9650;</button>
+                                <button class="arrow-button" id="startHourDecrement">&#9660;</button>
+                            </div>
+                        </div>
+                        <div class="time-input">
+                            <input type="number" id="startMinute" class="minute-input" min="0" max="59" value="00">
+                            <div class="arrow-container">
+                                <button class="arrow-button" id="startMinuteIncrement">&#9650;</button>
+                                <button class="arrow-button" id="startMinuteDecrement">&#9660;</button>
+                            </div>
+                        </div>
+                        <select class= "AmPm" id="startAmPm">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
                     <h2>End Time</h2>
-                    <input type="number" id="endHour" min="1" max="12" value="4">
-                    <input type="number" id="endMinute" min="0" max="59" value="0">
-                    <select id="endAmPm">
-                        <option value="AM">AM</option>
-                        <option value="PM">PM</option>
-                    </select>
+                    <div class="time-container">
+                        <div class="time-input">
+                            <input type="number" id="endHour" min="1" max="12" value="04">
+                            <div class="arrow-container">
+                                <button class="arrow-button" id="endHourIncrement">&#9650;</button>
+                                <button class="arrow-button" id="endHourDecrement">&#9660;</button>
+                            </div>
+                        </div>
+                        <div class="time-input">
+                            <input type="number" id="endMinute" class="minute-input" min="0" max="59" value="00">
+                            <div class="arrow-container">
+                                <button class="arrow-button" id="endMinuteIncrement">&#9650;</button>
+                                <button class="arrow-button" id="endMinuteDecrement">&#9660;</button>
+                            </div>
+                        </div>
+                        <select class="AmPm" id="endAmPm">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
