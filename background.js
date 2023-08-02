@@ -188,9 +188,9 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   let adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
 
   // Adjust the end time for the next day if it's before the start time
-  if (adjustedEndMinutes < adjustedStartMinutes) {
-    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
-  }
+//   if (adjustedEndMinutes < adjustedStartMinutes) {
+//     adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+//   }
 
   // Schedule the alarm for the start time
   const startDateTime = new Date();

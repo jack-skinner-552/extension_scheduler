@@ -313,8 +313,9 @@ function saveOptions() {
     ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
   ) {
 
-
-    if (window.confirm(`Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.\n Are you sure that's what you meant to do?`) === false) {
+    if (window.confirm(
+    `Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.
+    \n Are you sure that's what you meant to do?`) === false) {
       // If the user clicks "Cancel" in the confirmation dialog, set the input fields back to the previously saved values
       const statusText = document.getElementById('statusText');
       statusText.textContent = 'Save Canceled.';
