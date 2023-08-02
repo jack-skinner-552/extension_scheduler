@@ -1,3 +1,5 @@
+// popup.js
+
 document.addEventListener('DOMContentLoaded', function () {
   // Get the value of 'isWithinActiveTimeRange' from Chrome storage
   chrome.storage.local.get('isWithinActiveTimeRange', function (data) {

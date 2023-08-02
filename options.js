@@ -277,11 +277,6 @@ function saveOptions() {
   const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
   let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
 
-  // Adjust the end time for the next day if it's before the start time
-//  if (adjustedEndMinutes < adjustedStartMinutes) {
-//    adjustedEndMinutes -= 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
-//  }
-
   console.log("currentMinutes:", currentMinutes);
   console.log("adjustedStartMinutes:", adjustedStartMinutes);
   console.log("adjustedEndMinutes:", adjustedEndMinutes)
@@ -321,32 +316,14 @@ function saveOptions() {
 
     if (window.confirm(`Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.\n Are you sure that's what you meant to do?`) === false) {
       // If the user clicks "Cancel" in the confirmation dialog, set the input fields back to the previously saved values
-//       document.getElementById('startHour').value = previousStartHour;
-//       document.getElementById('startMinute').value = previousStartMinute;
-//       document.getElementById('startAmPm').value = previousStartAmPm;
-//
-//       document.getElementById('endHour').value = previousEndHour;
-//       document.getElementById('endMinute').value = previousEndMinute;
-//       document.getElementById('endAmPm').value = previousEndAmPm;
-
+      const statusText = document.getElementById('statusText');
+      statusText.textContent = 'Save Canceled.';
+      statusText.style.display = 'block';
+      // Clear the prompt after 5 seconds
+      setTimeout(() => {statusText.style.display = 'none';}, 5000);
       return;
     }
   }
-
-
-//  if (
-//    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
-//    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
-//  ) {
-//    const statusText = document.getElementById('statusText');
-//    statusText.textContent = 'Error: End Time cannot be set earlier than or equal to Start Time.';
-//    statusText.style.display = 'block';
-//    // Clear the prompt after 5 seconds
-//    setTimeout(() => {
-//      statusText.style.display = 'none';
-//    }, 5000);
-//    return; // Abort saving options if the validation fails
-//  }
 
   chrome.storage.local.set(options, function () {
 

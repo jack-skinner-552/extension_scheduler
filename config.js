@@ -1,3 +1,5 @@
+// config.js
+
 const config = {
   defaultOptions: {
     startHour: 8,
