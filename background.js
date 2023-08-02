@@ -4,8 +4,10 @@
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
     hour += 12;
-  } else if (amPm === 'AM' && hour === 12) {
-    hour = 0;
+  } else if (amPm === 'AM') {
+    if (hour === 12) {
+      hour = 0; // Special case for 12:00 AM
+    }
   }
   return hour;
 }
@@ -57,7 +59,7 @@ function getTotalMinutesSinceMidnight(timeString) {
 // Function to handle extension toggling based on time
 async function handleExtensionToggle() {
   // Console Logs for debugging
-//   console.log('handleExtensionToggle function called.');
+   console.log('handleExtensionToggle function called.');
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -102,16 +104,12 @@ async function handleExtensionToggle() {
       const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
       let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
 
-      // Adjust the end time for the next day if it's before the start time
-      if (adjustedEndMinutes < adjustedStartMinutes) {
-        adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
-      }
-
 
       const currentMinutes = currentHour * 60 + currentMinute;
 
       // Check if the current time is within the active time range and active days
-      const isWithinActiveTimeRange = isDayActive && currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
+      const isWithinActiveTimeRange = (currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes) ||
+          (adjustedEndMinutes < adjustedStartMinutes && currentMinutes < adjustedEndMinutes);
 
 
       // Console Logs for debugging
@@ -160,6 +158,8 @@ async function handleExtensionToggle() {
         // Change the extension icon based on the toggle state
         const iconPath = isWithinActiveTimeRange ? 'icon-on.png' : 'icon-off.png';
         chrome.action.setIcon({ path: iconPath });
+
+        console.log("Options after background toggle:", data);
 
 
       });

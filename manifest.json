@@ -3,7 +3,11 @@
   "name": "Extension Scheduler",
   "version": "1.0",
   "description": "Schedule and toggle the behavior of selected extensions based on time and days.",
-  "permissions": ["alarms", "management", "storage"],
+  "permissions": [
+    "alarms",
+    "management",
+    "storage"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -17,8 +21,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["css/styles.css", "images/icon.png"],
-      "matches": ["https://example.com/*"]
+      "resources": [
+        "css/styles.css",
+        "images/icon.png"
+      ],
+      "matches": [
+        "https://example.com/*"
+      ]
     }
   ],
   "icons": {
