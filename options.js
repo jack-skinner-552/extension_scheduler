@@ -316,7 +316,7 @@ function saveOptions() {
     if (window.confirm(
     `Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.
     \n Are you sure that's what you meant to do?`) === false) {
-      // If the user clicks "Cancel" in the confirmation dialog, set the input fields back to the previously saved values
+      // If the user clicks "Cancel" in the confirmation dialog, cancel Save
       const statusText = document.getElementById('statusText');
       statusText.textContent = 'Save Canceled.';
       statusText.style.display = 'block';
