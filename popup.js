@@ -1,13 +1,15 @@
-document.addEventListener('DOMContentLoaded', function () {
-  // Get the value of 'isWithinActiveTimeRange' from Chrome storage
-  chrome.storage.local.get('isWithinActiveTimeRange', function (data) {
-    const isWithinActiveTimeRange = data.isWithinActiveTimeRange;
+// popup.js
 
-    // Update the status text based on the value of 'isWithinActiveTimeRange'
+document.addEventListener('DOMContentLoaded', function () {
+  // Get the value of 'extensionsEnabled' from Chrome storage
+  chrome.storage.local.get('extensionsEnabled', function (data) {
+    const extensionsEnabled = data.extensionsEnabled;
+
+    // Update the status text based on the value of 'extensionsEnabled'
     const statusText = document.getElementById('status');
-    statusText.textContent = isWithinActiveTimeRange
-      ? 'Extensions Disabled:'
-      : 'Extensions Enabled:';
+    statusText.textContent = extensionsEnabled
+      ? 'Extensions Enabled:'
+      : 'Extensions Disabled:';
 
     // Code for displaying the extension icons in the popup
     const extensionIconsContainer = document.getElementById('extensionIcons');

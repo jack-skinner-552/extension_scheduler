@@ -8,14 +8,60 @@ async function getServiceWorkerRegistration() {
   return registration ? registration.active : null;
 }
 
+function getTotalMinutesSinceMidnight(timeString) {
+  const [time, amPm] = timeString.split(' ');
+  const [hours, minutes] = time.split(':').map(Number);
+
+  // Adjust the hours to 24-hour format based on AM/PM
+  let adjustedHours = hours;
+  if (amPm === 'PM' && hours !== 12) {
+    adjustedHours += 12;
+  } else if (amPm === 'AM' && hours === 12) {
+    adjustedHours = 0;
+  }
+
+  const totalMinutes = adjustedHours * 60 + minutes;
+  return totalMinutes;
+}
+
 // Function to convert time to 24-hour format
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
     hour += 12;
-  } else if (amPm === 'AM' && hour === 12) {
-    hour = 0;
+  } else if (amPm === 'AM') {
+    if (hour === 12) {
+      hour = 0; // Special case for 12:00 AM
+    }
   }
   return hour;
+}
+
+function padWithLeadingZero(number) {
+  return number.toString().padStart(2, '0');
+}
+
+// Event listeners to handle custom arrow buttons for number inputs
+function addArrowButtonListeners() {
+  const arrowButtons = document.querySelectorAll('.arrow-button');
+  arrowButtons.forEach((button) => {
+    button.addEventListener('click', handleArrowButtonClick);
+  });
+}
+
+function handleArrowButtonClick(event) {
+  const button = event.target;
+  const timeContainer = button.closest('.time-input');
+  const inputField = timeContainer.querySelector('input[type="number"]');
+  const step = parseInt(inputField.step) || 1;
+
+  if (button.id.endsWith('Increment')) {
+    inputField.stepUp(step);
+  } else if (button.id.endsWith('Decrement')) {
+    inputField.stepDown(step);
+  }
+
+  // Add leading zero if the value is a single digit
+  inputField.value = padWithLeadingZero(inputField.value);
 }
 
 // Function to update the active days checkboxes in the options UI
@@ -38,52 +84,23 @@ function populateDropdown(selectId, start, end, defaultValue) {
     option.textContent = value;
     select.appendChild(option);
   }
-  select.value = defaultValue;
-}
 
-// Function to enable/disable an extension using a promise-based wrapper
-function setExtensionState(extensionId, enabled) {
-  return new Promise((resolve, reject) => {
-    chrome.management.setEnabled(extensionId, enabled, () => {
-      if (chrome.runtime.lastError) {
-        reject(`Failed to set extension state for ${extensionId}: ${chrome.runtime.lastError.message}`);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
-// Function to update checked extensions in Chrome storage
-function updateCheckedExtensions(extensionId, enabled) {
-  chrome.storage.local.get('checkedExtensions', function (data) {
-    const checkedExtensions = data.checkedExtensions || [];
-
-    if (enabled) {
-      if (!checkedExtensions.includes(extensionId)) {
-        checkedExtensions.push(extensionId);
-      }
-    } else {
-      const index = checkedExtensions.indexOf(extensionId);
-      if (index !== -1) {
-        checkedExtensions.splice(index, 1);
-      }
-    }
-
-    chrome.storage.local.set({ checkedExtensions: checkedExtensions }, function () {
-      //console.log('Checked extensions updated.');
-    });
-  });
+  // Handle special case for '12 PM'
+  if (defaultValue === 12) {
+    select.value = '12';
+  } else {
+    select.value = String(defaultValue).padStart(2, '0');;
+  }
 }
 
 // Function to update the options on the HTML document
 function updateDocumentOptions(options) {
   const checkedExtensions = options.checkedExtensions || [];
-  const startHour = options.startHour || 8;
-  const startMinute = options.startMinute || 0;
+  const startHour = options.startHour || '08';
+  const startMinute = options.startMinute || '00';
   const startAmPm = options.startAmPm || 'AM';
-  const endHour = options.endHour || 4;
-  const endMinute = options.endMinute || 0;
+  const endHour = options.endHour || '04';
+  const endMinute = options.endMinute || '00';
   const endAmPm = options.endAmPm || 'PM';
 
   // Update the extension checkboxes
@@ -94,7 +111,7 @@ function updateDocumentOptions(options) {
   });
 
   // Update the start time fields
-  document.getElementById('startHour').value = startAmPm === 'PM' ? (startHour % 12) : startHour;
+  document.getElementById('startHour').value = startHour;
   document.getElementById('startMinute').value = startMinute;
   document.getElementById('startAmPm').value = startAmPm;
 
@@ -149,13 +166,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         const checkedExtensions = data.checkedExtensions || [];
 
         // Populate dropdown select elements for time selection
-        populateDropdown('startHour', 1, 12, data.startHour || 8);
-        populateDropdown('startMinute', 0, 59, data.startMinute || 0);
-        populateDropdown('endHour', 1, 12, data.endHour || 4);
-        populateDropdown('endMinute', 0, 59, data.endMinute || 0);
+        populateDropdown('startHour', '01', '12', data.startHour || '08');
+        populateDropdown('startMinute', '00', '59', data.startMinute || '00');
+        populateDropdown('endHour', '01', '12', data.endHour || '04');
+        populateDropdown('endMinute', '00', '59', data.endMinute || '00');
 
         // Update the values in the current HTML document
         updateDocumentOptions(data);
+
+        addArrowButtonListeners();
 
         // Create a Promise to fetch the extensions using chrome.management.getAll
         const extensionsPromise = new Promise((resolve) => {
@@ -244,35 +263,53 @@ function saveOptions() {
   }
 
 
-  const startHour = parseInt(document.getElementById('startHour').value, 10);
-  const startMinute = parseInt(document.getElementById('startMinute').value, 10);
+  const startHour = document.getElementById('startHour').value;
+  const startMinute = document.getElementById('startMinute').value;
   const startAmPm = document.getElementById('startAmPm').value;
 
-  let endHour = parseInt(document.getElementById('endHour').value, 10);
-  let endMinute = parseInt(document.getElementById('endMinute').value, 10);
+  let endHour = document.getElementById('endHour').value;
+  let endMinute = document.getElementById('endMinute').value;
   let endAmPm = document.getElementById('endAmPm').value;
+
+  // Store the current values as previously saved values
+  const previousStartHour = startHour;
+  const previousStartMinute = startMinute;
+  const previousStartAmPm = startAmPm;
+
+  const previousEndHour = endHour;
+  const previousEndMinute = endMinute;
+  const previousEndAmPm = endAmPm;
 
   // Calculate isWithinActiveTimeRange based on the current time and options
   const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const currentHour = new Date().getHours();
   const currentMinute = new Date().getMinutes();
   const currentMinutes = currentHour * 60 + currentMinute;
-  const adjustedStartMinutes = convertTo24HourFormat(startHour, startAmPm) * 60 + startMinute;
-  let adjustedEndMinutes = convertTo24HourFormat(endHour, endAmPm) * 60 + endMinute;
+  const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
+  let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
 
-  // Adjust the end time for the next day if it's before the start time
+  console.log("currentMinutes:", currentMinutes);
+  console.log("adjustedStartMinutes:", adjustedStartMinutes);
+  console.log("adjustedEndMinutes:", adjustedEndMinutes)
+
+  let isWithinActiveTimeRange = false;
+
   if (adjustedEndMinutes < adjustedStartMinutes) {
-    adjustedEndMinutes += 24 * 60; // Add 24 hours (in minutes) to adjust for the next day
+    // Two time ranges: from start time to midnight and from midnight to end time
+    isWithinActiveTimeRange =
+      (currentMinutes >= adjustedStartMinutes && currentMinutes <= 24 * 60) || // From start time to midnight
+      (currentMinutes >= 0 && currentMinutes < adjustedEndMinutes); // From midnight to end time
+  } else {
+    // Normal time range
+    isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
   }
-
-  const isWithinActiveTimeRange = currentMinutes >= adjustedStartMinutes && currentMinutes < adjustedEndMinutes;
 
   // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
   const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
 
   const options = {
     checkedExtensions: checkedExtensions,
-    startHour: startAmPm === 'PM' ? (startHour % 12) : startHour,
+    startHour: startHour,
     startMinute: startMinute,
     startAmPm: startAmPm,
     endHour: endHour,
@@ -284,17 +321,40 @@ function saveOptions() {
 
   // Validate the End Time against the Start Time
   if (
-    (startAmPm === 'PM' && endAmPm === 'AM') || // If Start Time is PM and End Time is AM
-    ((endAmPm === startAmPm) && (endHour < startHour || (endHour === startHour && endMinute <= startMinute)))
+    ((startHour === endHour) && (startMinute === endMinute) && (startAmPm === endAmPm)) // If Start Time is same as End Time
   ) {
     const statusText = document.getElementById('statusText');
-    statusText.textContent = 'Error: End Time cannot be set earlier than or equal to Start Time.';
+    statusText.textContent = 'Error: End Time cannot be the same as Start Time.';
     statusText.style.display = 'block';
     // Clear the prompt after 5 seconds
-    setTimeout(() => {
-      statusText.style.display = 'none';
-    }, 5000);
+    setTimeout(() => {statusText.style.display = 'none';}, 5000);
     return; // Abort saving options if the validation fails
+  } else if (
+    // If Start Time is PM and End Time is AM
+    ((startAmPm === 'PM' && endAmPm === 'AM') ||
+    // If both Start Time and End Time are PM, and End Hour is less than Start Hour (except when Start Hour is 12)
+    ((endAmPm === 'PM' && startAmPm === 'PM') && (endHour < startHour) && (startHour != 12)) ||
+    // If both Start Time and End Time are AM, and End Hour is less than Start Hour (except when Start Hour is 12)
+    ((endAmPm === 'AM' && startAmPm === 'AM') && (endHour < startHour) && (startHour != 12)) ||
+    // If both Start Time and End Time are PM, and End Hour is equal to Start Hour, and End Minute is less than or equal to Start Minute
+    ((endAmPm === 'PM' && startAmPm === 'PM') && (endHour === startHour) && (endMinute <= startMinute)) ||
+    // If both Start Time and End Time are AM, and End Hour is equal to Start Hour, and End Minute is less than or equal to Start Minute
+    ((endAmPm === 'AM' && startAmPm === 'AM') && (endHour === startHour) && (endMinute <= startMinute)) ||
+    // If Start Time is PM and End Time is AM, and End Hour is 12, and either (Start Hour is 12 and End Minute is less than Start Minute) or Start Hour is not 12
+    ((endAmPm === 'AM' && startAmPm === 'PM') && (endHour === 12) && (((startHour === 12) && (endMinute < startMinute)) || (startHour != 12))))
+  ) {
+
+    if (window.confirm(
+    `Scheduler will be active between ${startHour}:${startMinute} ${startAmPm} and midnight, and then between midnight and ${endHour}:${endMinute} ${endAmPm}.
+    \n Are you sure that's what you meant to do?`) === false) {
+      // If the user clicks "Cancel" in the confirmation dialog, cancel Save
+      const statusText = document.getElementById('statusText');
+      statusText.textContent = 'Save Canceled.';
+      statusText.style.display = 'block';
+      // Clear the prompt after 5 seconds
+      setTimeout(() => {statusText.style.display = 'none';}, 5000);
+      return;
+    }
   }
 
   chrome.storage.local.set(options, function () {
