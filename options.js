@@ -2,6 +2,8 @@
 
 import { config } from './config.js';
 
+let previousOptions = {};
+
 // Function to get the service worker registration asynchronously
 async function getServiceWorkerRegistration() {
   const registration = await navigator.serviceWorker.getRegistration();
@@ -171,8 +173,6 @@ function updateDocumentOptions(options) {
     }
   });
 }
-
-let previousOptions = {};
 
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
