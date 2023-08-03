@@ -1,9 +1,18 @@
+/* options.css */
+
+/* Default font size for non-header text */
+* {
+  font-size: 14px; /* Adjust the font size as needed */
+}
+
 h1 {
-  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  font-size: 30px;
 }
 
 h2 {
-  font-size: 18px;
+  font-size: 24px;
   margin-top: 20px;
 }
 
@@ -24,10 +33,15 @@ li {
   margin-right: 10px;
 }
 
-.time-settings {
+.time-settings-container {
   display: flex;
   align-items: center;
   margin-top: 20px;
+}
+
+.time-settings-container > .time-settings,
+.time-settings-container > .save-button-container {
+  margin-right: 20px;
 }
 
 label {
@@ -40,6 +54,7 @@ select {
 
 .options-container {
   display: flex;
+  flex-wrap: wrap; /* Added flex-wrap property to handle wrapping */
   margin-bottom: 20px;
 }
 
@@ -47,6 +62,70 @@ select {
   flex: 1;
 }
 
+.time-active-container {
+  flex: 1;
+}
+
 .active-days-container {
   flex: 1;
+}
+
+.time-settings {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+  width: 400px;
+  justify-content: space-between;
+}
+
+.time-container {
+  display:flex;
+  flex-direction: row;
+}
+
+.time-input {
+  display: flex;
+  align-items: center;
+}
+
+.arrow-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide default number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Style custom arrow buttons */
+.arrow-button {
+  background-color: #f0f0f0;
+  border: none;
+  color: #000;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.AmPm{
+  font-size: 14px;
+}
+
+input[type="number"] {
+  -webkit-appearance: none; /* Safari and Chrome */
+  /*-moz-appearance: textfield; /* Firefox */
+  appearance: textfield; /* For other browsers */
+  width: 32px; /* Adjust the width as needed */
+  text-align: center; /* Center the content inside the input */
+  height: 30px;
+  font-size: 14px;
 }
