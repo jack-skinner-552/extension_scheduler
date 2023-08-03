@@ -172,6 +172,8 @@ function updateDocumentOptions(options) {
   });
 }
 
+let previousOptions = {};
+
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
   //console.log('DOM content loaded.');
@@ -264,6 +266,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
           }
         });
+        previousOptions = { ...data };
       }
     );
   }
@@ -274,8 +277,59 @@ document.addEventListener('DOMContentLoaded', async function () {
    });
 });
 
+// Function to check if any changes have been made to the options
+function areChangesMade() {
+  const startHour = document.getElementById('startHour').value;
+  const startMinute = document.getElementById('startMinute').value;
+  const startAmPm = document.getElementById('startAmPm').value;
 
+  const endHour = document.getElementById('endHour').value;
+  const endMinute = document.getElementById('endMinute').value;
+  const endAmPm = document.getElementById('endAmPm').value;
 
+  const checkedExtensionsCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
+  const checkedExtensions = Array.from(checkedExtensionsCheckboxes).map((checkbox) => checkbox.getAttribute('data-extension-id'));
+
+  const activeDayCheckboxes = document.querySelectorAll('input[name="activeDays"]:checked');
+  const activeDays = Array.from(activeDayCheckboxes).map((checkbox) => checkbox.value);
+
+  // Check if any of the options have changed
+  return (
+    startHour !== previousOptions.startHour ||
+    startMinute !== previousOptions.startMinute ||
+    startAmPm !== previousOptions.startAmPm ||
+    endHour !== previousOptions.endHour ||
+    endMinute !== previousOptions.endMinute ||
+    endAmPm !== previousOptions.endAmPm ||
+    !arraysEqual(checkedExtensions, previousOptions.checkedExtensions) ||
+    !arraysEqual(activeDays, previousOptions.activeDays)
+    // Add more checks if you have other options that can be changed
+  );
+}
+
+// Function to compare two arrays for equality
+function arraysEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Event listener for the beforeunload event
+window.addEventListener('beforeunload', function (event) {
+  // Check if changes have been made
+  if (areChangesMade()) {
+    // Display a confirmation message to the user
+    const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave the page?';
+    event.returnValue = confirmationMessage; // This will display a browser-specific confirmation dialog
+    return confirmationMessage; // For some older browsers
+  }
+});
 
 // Function to save options to Chrome storage
 function saveOptions() {
@@ -417,6 +471,8 @@ function saveOptions() {
       }
     });
   });
+
+  previousOptions = { ...options };
 
   // Clear the prompt after 5 seconds
   setTimeout(() => {
