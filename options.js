@@ -341,7 +341,7 @@ function saveOptions() {
     // If both Start Time and End Time are AM, and End Hour is equal to Start Hour, and End Minute is less than or equal to Start Minute
     ((endAmPm === 'AM' && startAmPm === 'AM') && (endHour === startHour) && (endMinute <= startMinute)) ||
     // If Start Time is PM and End Time is AM, and End Hour is 12, and either (Start Hour is 12 and End Minute is less than Start Minute) or Start Hour is not 12
-    ((endAmPm === 'AM' && startAmPm === 'PM') && (endHour === 12) && ((startHour === 12) && (endMinute < startMinute)) || (startHour != 12)))
+    ((endAmPm === 'AM' && startAmPm === 'PM') && (endHour === 12) && (((startHour === 12) && (endMinute < startMinute)) || (startHour != 12))))
   ) {
 
     if (window.confirm(
