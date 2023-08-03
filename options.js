@@ -53,11 +53,45 @@ function handleArrowButtonClick(event) {
   const timeContainer = button.closest('.time-input');
   const inputField = timeContainer.querySelector('input[type="number"]');
   const step = parseInt(inputField.step) || 1;
+  const maxHour = 12;
+  const maxMinute = 59;
 
   if (button.id.endsWith('Increment')) {
-    inputField.stepUp(step);
+    if (inputField.classList.contains('hour-input')) {
+      if (parseInt(inputField.value) === maxHour) {
+        // If the current value is the maxHour, set it back to 1
+        inputField.value = 1;
+      } else {
+        inputField.stepUp(step);
+      }
+    } else if (inputField.classList.contains('minute-input')) {
+      if (parseInt(inputField.value) === maxMinute) {
+        // If the current value is the maxMinute, set it back to 0
+        inputField.value = 0;
+      } else {
+        inputField.stepUp(step);
+      }
+    } else {
+      inputField.stepUp(step);
+    }
   } else if (button.id.endsWith('Decrement')) {
-    inputField.stepDown(step);
+    if (inputField.classList.contains('hour-input')) {
+      if (parseInt(inputField.value) === 1) {
+        // If the current value is 1, set it to maxHour
+        inputField.value = maxHour;
+      } else {
+        inputField.stepDown(step);
+      }
+    } else if (inputField.classList.contains('minute-input')) {
+      if (parseInt(inputField.value) === 0) {
+        // If the current value is 0, set it to maxMinute
+        inputField.value = maxMinute;
+      } else {
+        inputField.stepDown(step);
+      }
+    } else {
+      inputField.stepDown(step);
+    }
   }
 
   // Add leading zero if the value is a single digit
