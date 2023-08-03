@@ -320,7 +320,7 @@ function arraysEqual(arr1, arr2) {
   return true;
 }
 
-// Event listener for the beforeunload event
+// Event listener for the beforeunload event (Check if there are unsaved changes when closing page)
 window.addEventListener('beforeunload', function (event) {
   // Check if changes have been made
   if (areChangesMade()) {
