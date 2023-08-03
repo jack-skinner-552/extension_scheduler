@@ -12,13 +12,6 @@ function convertTo24HourFormat(hour, amPm) {
   return hour;
 }
 
-// Function to convert time to 12-hour format
-function convertTo12HourFormat(hour) {
-  const amPm = hour >= 12 ? 'PM' : 'AM';
-  const formattedHour = hour % 12 || 12;
-  return { formattedHour, amPm };
-}
-
 // Function to enable/disable an extension using a promise-based wrapper
 function setExtensionState(extensionId, enabled) {
   if (extensionId === chrome.runtime.id) {
