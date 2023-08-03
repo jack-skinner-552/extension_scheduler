@@ -73,7 +73,6 @@ browsing experience!
 ## Known Issues:
 
 - icon-on.png is hard to see on a browser with a Light Green color theme.
-- Minutes currently do not have zero-padding.
 
 <sub><sup>\* \- As of 7/25/2023, the Extension Scheduler is not yet available to download on the Chrome/Edge Web Store.
 To add the Extension Scheduler to your browser, download this code, then in your browser, navigate to the Extensions
