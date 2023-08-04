@@ -43,8 +43,6 @@ function getTotalMinutesSinceMidnight(timeString) {
 // Function to handle extension toggling based on time
 async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
   const timestamp1 = new Date().toLocaleString();
-  // Console Logs for debugging
-  console.log(`[${timestamp1}] handleExtensionToggle function called.`);
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -67,10 +65,6 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
       const currentMinutes = currentHour * 60 + currentMinute;
       const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
       let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
-
-      //console.log("currentMinutes:", currentMinutes);
-      //console.log("adjustedStartMinutes:", adjustedStartMinutes);
-      //console.log("adjustedEndMinutes:", adjustedEndMinutes);
 
       let isWithinActiveTimeRange = false;
 
@@ -110,8 +104,6 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
             const isEnabled = isWithinActiveTimeRange && extensionsEnabled;
             setExtensionState(extensionId, isEnabled)
               .then(() => {
-                // Console Log for debugging
-                //console.log(`Extension ${extensionId} is ${isEnabled ? 'enabled' : 'disabled'}.`);
               })
               .catch((error) => {
                 console.error(`Failed to set extension state for ${extensionId}:`, error);
@@ -122,8 +114,6 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
         // Update the extensionsEnabled value in the Chrome storage
         // Use the variable declared in the function scope to avoid conflict
         chrome.storage.local.set({ extensionsEnabled: extensionsEnabled }, function () {
-          // Console Log Times for debugging
-          //console.log('extensionsEnabled updated in storage:', isWithinActiveTimeRange);
           // Change the extension icon based on the toggle state
           const iconPath = isWithinActiveTimeRange ? 'images/icon-on.png' : 'images/icon-off.png';
           chrome.action.setIcon({ path: iconPath });
@@ -154,8 +144,6 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   let adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
   let adjustedEndHour = convertTo24HourFormat(endHour, endAmPm);
 
-  //console.log('adjustedStartHour:', adjustedStartHour);
-  //console.log('adjustedEndHour:', adjustedEndHour);
 
   // Get the current date and time
   const now = new Date();
@@ -178,15 +166,12 @@ function scheduleAlarmsForStartAndEndTimes(data) {
     adjustedStartHour += 24;
     adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
   }
-  //console.log('Current minutes since midnight:', currentMinutes)
-  //console.log('Adjusted start time (minutes since midnight):', adjustedStartMinutes);
-  //console.log('Adjusted end time (minutes since midnight):', adjustedEndMinutes);
 
   // Schedule the alarm for the start time
   const startDateTime = new Date();
   startDateTime.setHours(adjustedStartHour, startMinute, 0, 0);
   const startTimeStamp = startDateTime.getTime();
-  console.log('Start time alarm will trigger at:', new Date(startTimeStamp).toLocaleString());
+
 
   chrome.alarms.create('extensionToggleAlarmStart', { when: startTimeStamp });
 
@@ -194,8 +179,6 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   const endDateTime = new Date();
   endDateTime.setHours(adjustedEndHour, endMinute, 0, 0);
   const endTimeStamp = endDateTime.getTime();
-  console.log('End time alarm will trigger at:', new Date(endTimeStamp).toLocaleString());
-
   chrome.alarms.create('extensionToggleAlarmEnd', { when: endTimeStamp });
 
   chrome.alarms.getAll((alarms) => {
@@ -206,7 +189,6 @@ function scheduleAlarmsForStartAndEndTimes(data) {
 
 // Add an event listener for alarms
 chrome.alarms.onAlarm.addListener((alarm) => {
-  console.log('Alarm triggered:', alarm.name); // Log the name of the triggered alarm
   if (alarm.name === 'extensionToggleAlarmStart' || alarm.name === 'extensionToggleAlarmEnd') {
     handleExtensionToggle(true, alarm.name);
   }

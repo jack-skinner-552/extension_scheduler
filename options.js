@@ -176,7 +176,6 @@ function updateDocumentOptions(options) {
 
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
-  //console.log('DOM content loaded.');
   const extensionList = document.getElementById('extensionList');
   const selectAllCheckbox = document.getElementById('selectAll');
   const messageContainer = document.getElementById('messageContainer');
@@ -197,7 +196,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         'extensionsEnabled'
       ],
       function (data) {
-        console.log('Values in Chrome Storage:', data);
         // Get the list of checked extensions from Chrome storage
         const checkedExtensions = data.checkedExtensions || [];
 
@@ -376,10 +374,6 @@ function saveOptions() {
   const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
   let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
 
-  console.log("currentMinutes:", currentMinutes);
-  console.log("adjustedStartMinutes:", adjustedStartMinutes);
-  console.log("adjustedEndMinutes:", adjustedEndMinutes)
-
   let isWithinActiveTimeRange = false;
 
   if (adjustedEndMinutes < adjustedStartMinutes) {
@@ -449,7 +443,6 @@ function saveOptions() {
 
     // Log the values in Chrome storage after save
     chrome.storage.local.get(null, function (data) {
-      console.log('Values in Chrome storage after save:', data);
       // Update the values in the current HTML document
       updateDocumentOptions(data);
 
@@ -478,7 +471,6 @@ function saveOptions() {
   setTimeout(() => {
     statusText.style.display = 'none';
   }, 5000);
-  //console.log('Options saved.'); // Check if the options are saved successfully
 }
 
 
