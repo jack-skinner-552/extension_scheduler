@@ -62,6 +62,8 @@ suggestion, or want to add new features, feel free to open an issue or submit a 
 The Extension Scheduler is open-source software licensed under the [MIT License](LICENSE). You are free to use, modify,
 and distribute this extension according to the terms of the license.
 
+Extension Scheduler icon by [icons8](https://icons8.com/).
+
 ## Support
 
 If you encounter any issues or have questions regarding the Extension Scheduler, please don't hesitate to contact us
