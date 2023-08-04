@@ -134,12 +134,6 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
         });
       });
 
-      // Schedule the next toggle using the Alarm API only if it wasn't triggered by an alarm
-      /* if (!triggeredByAlarm) {
-        const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
-        chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
-      } */
-
       if (triggeredByAlarm && (alarmName === 'extensionToggleAlarmEnd' || alarmName === 'extensionToggleAlarmStart')) {
         scheduleAlarmsForStartAndEndTimes(data);
       }
