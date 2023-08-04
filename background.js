@@ -125,7 +125,7 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
           // Console Log Times for debugging
           //console.log('extensionsEnabled updated in storage:', isWithinActiveTimeRange);
           // Change the extension icon based on the toggle state
-          const iconPath = isWithinActiveTimeRange ? 'icon-on.png' : 'icon-off.png';
+          const iconPath = isWithinActiveTimeRange ? 'images/icon-on.png' : 'images/icon-off.png';
           chrome.action.setIcon({ path: iconPath });
           const timestamp2 = new Date().toLocaleString();
           if (triggeredByAlarm && !extensionsEnabled) {

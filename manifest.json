@@ -11,28 +11,17 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon-off.png",
-      "48": "icon-off.png",
-      "128": "icon-off.png"
+      "16": "images/icon-on.png",
+      "48": "images/icon-on.png",
+      "128": "images/icon-on.png"
     }
   },
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "css/styles.css",
-        "images/icon.png"
-      ],
-      "matches": [
-        "https://example.com/*"
-      ]
-    }
-  ],
   "icons": {
-    "16": "icon-off.png",
-    "48": "icon-off.png",
-    "128": "icon-off.png"
+    "16": "images/icon-on.png",
+    "48": "images/icon-on.png",
+    "128": "images/icon-on.png"
   }
 }
