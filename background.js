@@ -238,6 +238,12 @@ chrome.runtime.onMessage.addListener(async function (message) {
   }
 });
 
+// Add an event listener for the runtime.onStartup event
+chrome.runtime.onStartup.addListener(() => {
+  // This code will run when the browser is opened or restarted
+  handleExtensionToggle();
+});
+
 // Function to handle the initial setup of alarms and extension toggling
 async function initialSetup() {
   // Retrieve the start and end times from the Chrome storage
