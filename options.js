@@ -443,6 +443,7 @@ function saveOptions() {
 
     // Log the values in Chrome storage after save
     chrome.storage.local.get(null, function (data) {
+      console.log('Values in Chrome storage after save:', data);
       // Update the values in the current HTML document
       updateDocumentOptions(data);
 
