@@ -5,7 +5,7 @@
 <head>
     <title>Extension Options</title>
     <script type="module" src="options.js"></script>
-    <link rel="stylesheet" href="options.css">
+    <link rel="stylesheet" href="css/options.css">
 </head>
 <body>
 <h1>Extension Options</h1>
@@ -58,7 +58,7 @@
                     <h2>Start Time</h2>
                     <div class="time-container">
                         <div class="time-input">
-                            <input type="number" id="startHour" min="1" max="12" value="08">
+                            <input type="number" id="startHour" class="hour-input" min="1" max="12" value="08">
                             <div class="arrow-container">
                                 <button class="arrow-button" id="startHourIncrement">&#9650;</button>
                                 <button class="arrow-button" id="startHourDecrement">&#9660;</button>
@@ -82,7 +82,7 @@
                     <h2>End Time</h2>
                     <div class="time-container">
                         <div class="time-input">
-                            <input type="number" id="endHour" min="1" max="12" value="04">
+                            <input type="number" id="endHour" class="hour-input" min="1" max="12" value="04">
                             <div class="arrow-container">
                                 <button class="arrow-button" id="endHourIncrement">&#9650;</button>
                                 <button class="arrow-button" id="endHourDecrement">&#9660;</button>
@@ -111,6 +111,6 @@
     </div>
 </div>
 
-
+<div class="footer"><p>Extension Scheduler icon by <a href="https://icons8.com/" target="_blank">icons8</a></p></div>
 </body>
 </html>

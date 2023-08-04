@@ -2,6 +2,8 @@
 
 import { config } from './config.js';
 
+let previousOptions = {};
+
 // Function to get the service worker registration asynchronously
 async function getServiceWorkerRegistration() {
   const registration = await navigator.serviceWorker.getRegistration();
@@ -53,11 +55,45 @@ function handleArrowButtonClick(event) {
   const timeContainer = button.closest('.time-input');
   const inputField = timeContainer.querySelector('input[type="number"]');
   const step = parseInt(inputField.step) || 1;
+  const maxHour = 12;
+  const maxMinute = 59;
 
   if (button.id.endsWith('Increment')) {
-    inputField.stepUp(step);
+    if (inputField.classList.contains('hour-input')) {
+      if (parseInt(inputField.value) === maxHour) {
+        // If the current value is the maxHour, set it back to 1
+        inputField.value = 1;
+      } else {
+        inputField.stepUp(step);
+      }
+    } else if (inputField.classList.contains('minute-input')) {
+      if (parseInt(inputField.value) === maxMinute) {
+        // If the current value is the maxMinute, set it back to 0
+        inputField.value = 0;
+      } else {
+        inputField.stepUp(step);
+      }
+    } else {
+      inputField.stepUp(step);
+    }
   } else if (button.id.endsWith('Decrement')) {
-    inputField.stepDown(step);
+    if (inputField.classList.contains('hour-input')) {
+      if (parseInt(inputField.value) === 1) {
+        // If the current value is 1, set it to maxHour
+        inputField.value = maxHour;
+      } else {
+        inputField.stepDown(step);
+      }
+    } else if (inputField.classList.contains('minute-input')) {
+      if (parseInt(inputField.value) === 0) {
+        // If the current value is 0, set it to maxMinute
+        inputField.value = maxMinute;
+      } else {
+        inputField.stepDown(step);
+      }
+    } else {
+      inputField.stepDown(step);
+    }
   }
 
   // Add leading zero if the value is a single digit
@@ -228,6 +264,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
           }
         });
+        previousOptions = { ...data };
       }
     );
   }
@@ -238,8 +275,59 @@ document.addEventListener('DOMContentLoaded', async function () {
    });
 });
 
+// Function to check if any changes have been made to the options
+function areChangesMade() {
+  const startHour = document.getElementById('startHour').value;
+  const startMinute = document.getElementById('startMinute').value;
+  const startAmPm = document.getElementById('startAmPm').value;
 
+  const endHour = document.getElementById('endHour').value;
+  const endMinute = document.getElementById('endMinute').value;
+  const endAmPm = document.getElementById('endAmPm').value;
 
+  const checkedExtensionsCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
+  const checkedExtensions = Array.from(checkedExtensionsCheckboxes).map((checkbox) => checkbox.getAttribute('data-extension-id'));
+
+  const activeDayCheckboxes = document.querySelectorAll('input[name="activeDays"]:checked');
+  const activeDays = Array.from(activeDayCheckboxes).map((checkbox) => checkbox.value);
+
+  // Check if any of the options have changed
+  return (
+    startHour !== previousOptions.startHour ||
+    startMinute !== previousOptions.startMinute ||
+    startAmPm !== previousOptions.startAmPm ||
+    endHour !== previousOptions.endHour ||
+    endMinute !== previousOptions.endMinute ||
+    endAmPm !== previousOptions.endAmPm ||
+    !arraysEqual(checkedExtensions, previousOptions.checkedExtensions) ||
+    !arraysEqual(activeDays, previousOptions.activeDays)
+    // Add more checks if you have other options that can be changed
+  );
+}
+
+// Function to compare two arrays for equality
+function arraysEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Event listener for the beforeunload event (Check if there are unsaved changes when closing page)
+window.addEventListener('beforeunload', function (event) {
+  // Check if changes have been made
+  if (areChangesMade()) {
+    // Display a confirmation message to the user
+    const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave the page?';
+    event.returnValue = confirmationMessage; // This will display a browser-specific confirmation dialog
+    return confirmationMessage; // For some older browsers
+  }
+});
 
 // Function to save options to Chrome storage
 function saveOptions() {
@@ -376,6 +464,8 @@ function saveOptions() {
       }
     });
   });
+
+  previousOptions = { ...options };
 
   // Clear the prompt after 5 seconds
   setTimeout(() => {

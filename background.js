@@ -3,20 +3,11 @@
 // Function to convert time to 24-hour format
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
-    hour += 12;
-  } else if (amPm === 'AM') {
-    if (hour === 12) {
-      hour = 0; // Special case for 12:00 AM
-    }
+    return hour + 12;
+  } else if (amPm === 'AM' && hour === 12) {
+    return 0;
   }
   return hour;
-}
-
-// Function to convert time to 12-hour format
-function convertTo12HourFormat(hour) {
-  const amPm = hour >= 12 ? 'PM' : 'AM';
-  const formattedHour = hour % 12 || 12;
-  return { formattedHour, amPm };
 }
 
 // Function to enable/disable an extension using a promise-based wrapper
@@ -44,20 +35,13 @@ function getTotalMinutesSinceMidnight(timeString) {
   const [time, amPm] = timeString.split(' ');
   const [hours, minutes] = time.split(':').map(Number);
 
-  // Adjust the hours to 24-hour format based on AM/PM
-  let adjustedHours = hours;
-  if (amPm === 'PM' && hours !== 12) {
-    adjustedHours += 12;
-  } else if (amPm === 'AM' && hours === 12) {
-    adjustedHours = 0;
-  }
-
+  const adjustedHours = convertTo24HourFormat(hours, amPm);
   const totalMinutes = adjustedHours * 60 + minutes;
   return totalMinutes;
 }
 
 // Function to handle extension toggling based on time
-async function handleExtensionToggle(triggeredByAlarm = false) {
+async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
   const timestamp1 = new Date().toLocaleString();
 
   // Retrieve the start and end times from the Chrome storage
@@ -131,7 +115,7 @@ async function handleExtensionToggle(triggeredByAlarm = false) {
         // Use the variable declared in the function scope to avoid conflict
         chrome.storage.local.set({ extensionsEnabled: extensionsEnabled }, function () {
           // Change the extension icon based on the toggle state
-          const iconPath = isWithinActiveTimeRange ? 'icon-on.png' : 'icon-off.png';
+          const iconPath = isWithinActiveTimeRange ? 'images/icon-on.png' : 'images/icon-off.png';
           chrome.action.setIcon({ path: iconPath });
           const timestamp2 = new Date().toLocaleString();
           if (triggeredByAlarm && !extensionsEnabled) {
@@ -139,14 +123,12 @@ async function handleExtensionToggle(triggeredByAlarm = false) {
           }
         });
       });
+
+      if (triggeredByAlarm && (alarmName === 'extensionToggleAlarmEnd' || alarmName === 'extensionToggleAlarmStart')) {
+        scheduleAlarmsForStartAndEndTimes(data);
+      }
     }
   );
-
-  // Schedule the next toggle using the Alarm API only if it wasn't triggered by an alarm
-  if (!triggeredByAlarm) {
-    const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
-    chrome.alarms.create('extensionToggleAlarm', { delayInMinutes: nextToggleDelay / 60000 });
-  }
 }
 
 // Function to schedule the alarms for the start and end times
@@ -159,16 +141,37 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   const endAmPm = data.endAmPm || 'PM'; // Set a default end AM/PM if not found
 
   // Convert start and end times to 24-hour format
-  const adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
-  const adjustedEndHour = convertTo24HourFormat(endHour, endAmPm);
+  let adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
+  let adjustedEndHour = convertTo24HourFormat(endHour, endAmPm);
 
-  const adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
+
+  // Get the current date and time
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  // Check if the current time is after both Start and End times
+  const currentMinutes = currentHour * 60 + currentMinute;
+  let adjustedStartMinutes = getTotalMinutesSinceMidnight(`${startHour}:${startMinute} ${startAmPm}`);
   let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
+
+  if (currentMinutes >= adjustedEndMinutes) {
+    // If the current time is after the Start time, add 24 hours to the Start Hour
+    adjustedEndHour += 24;
+    adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
+  }
+
+  if (currentMinutes >= adjustedStartMinutes) {
+    // If the current time is after the End time, add 24 hours to the End Hour
+    adjustedStartHour += 24;
+    adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
+  }
 
   // Schedule the alarm for the start time
   const startDateTime = new Date();
   startDateTime.setHours(adjustedStartHour, startMinute, 0, 0);
   const startTimeStamp = startDateTime.getTime();
+
 
   chrome.alarms.create('extensionToggleAlarmStart', { when: startTimeStamp });
 
@@ -176,59 +179,63 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   const endDateTime = new Date();
   endDateTime.setHours(adjustedEndHour, endMinute, 0, 0);
   const endTimeStamp = endDateTime.getTime();
-
   chrome.alarms.create('extensionToggleAlarmEnd', { when: endTimeStamp });
+
+  chrome.alarms.getAll((alarms) => {
+    console.log('Active Alarms:', alarms);
+  });
 }
 
 
 // Add an event listener for alarms
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'extensionToggleAlarmStart' || alarm.name === 'extensionToggleAlarmEnd') {
-    handleExtensionToggle(true);
+    handleExtensionToggle(true, alarm.name);
   }
 });
 
 // Add an event listener to receive messages from the options page
-chrome.runtime.onMessage.addListener(function (message) {
+chrome.runtime.onMessage.addListener(async function (message) {
   if (message.optionsUpdated) {
     // The options page notified about the options change
     // Let's update the extension's behavior accordingly
-    chrome.storage.local.get(null, function (data) {
-      // Schedule alarms for the updated start and end times
-      scheduleAlarmsForStartAndEndTimes(data);
-
-      // Trigger the extension toggle based on the new settings
-      handleExtensionToggle();
+    const data = await new Promise((resolve) => {
+      chrome.storage.local.get(
+        ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
+        resolve
+      );
     });
+
+    // Schedule alarms for the updated start and end times
+    scheduleAlarmsForStartAndEndTimes(data);
+
+    // Trigger the extension toggle based on the new settings
+    await handleExtensionToggle();
   }
 });
 
+// Add an event listener for the runtime.onStartup event
+chrome.runtime.onStartup.addListener(() => {
+  // This code will run when the browser is opened or restarted
+  handleExtensionToggle();
+});
+
 // Function to handle the initial setup of alarms and extension toggling
-function initialSetup() {
+async function initialSetup() {
   // Retrieve the start and end times from the Chrome storage
-  chrome.storage.local.get(
-    ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
-    function (data) {
-      // Schedule the initial alarms for start and end times
-      scheduleAlarmsForStartAndEndTimes(data);
+  const data = await new Promise((resolve) => {
+    chrome.storage.local.get(
+      ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
+      resolve
+    );
+  });
 
-      // Start the periodic toggling of the extension
-      handleExtensionToggle(data.extensionsEnabled);
-    }
-  );
+  // Schedule the initial alarms for start and end times
+  scheduleAlarmsForStartAndEndTimes(data);
+
+  // Start the periodic toggling of the extension
+  await handleExtensionToggle(data.extensionsEnabled);
 }
-
-// Retrieve the start and end times from the Chrome storage
-chrome.storage.local.get(
-  ['startHour', 'startMinute', 'startAmPm', 'endHour', 'endMinute', 'endAmPm', 'checkedExtensions', 'extensionsEnabled', 'activeDays'],
-  function (data) {
-    // Schedule the initial alarms for start and end times
-    scheduleAlarmsForStartAndEndTimes(data);
-
-    // Start the periodic toggling of the extension
-    handleExtensionToggle(data.extensionsEnabled);
-  }
-);
 
 // Start the initial setup when the extension is first loaded
 initialSetup();
