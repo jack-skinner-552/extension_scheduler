@@ -44,7 +44,7 @@ function getTotalMinutesSinceMidnight(timeString) {
 async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
   const timestamp1 = new Date().toLocaleString();
   // Console Logs for debugging
-  console.log(`[${timestamp1}] handleExtensionToggle function called.`);
+  // console.log(`[${timestamp1}] handleExtensionToggle function called.`);
 
   // Retrieve the start and end times from the Chrome storage
   chrome.storage.local.get(
@@ -126,7 +126,7 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
           //console.log('extensionsEnabled updated in storage:', isWithinActiveTimeRange);
 
           // Change the extension icon based on the toggle state
-          const iconPath = isWithinActiveTimeRange ? 'images/icon-on.png' : 'images/icon-off.png';
+          const iconPath = extensionsEnabled ? 'images/icon-on.png' : 'images/icon-off.png';
           chrome.action.setIcon({ path: iconPath });
           const timestamp2 = new Date().toLocaleString();
           if (triggeredByAlarm && !extensionsEnabled) {
@@ -134,6 +134,16 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
           }
         });
       });
+
+      // Schedule the next toggle using the Alarm API
+
+      const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
+
+      setTimeout(() => {
+        // Code to execute after the delay
+        handleExtensionToggle();
+      }, nextToggleDelay);
+
 
       if (triggeredByAlarm && (alarmName === 'extensionToggleAlarmEnd' || alarmName === 'extensionToggleAlarmStart')) {
         scheduleAlarmsForStartAndEndTimes(data);
