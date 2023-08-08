@@ -1,5 +1,6 @@
 // background.js
 
+
 // Function to convert time to 24-hour format
 function convertTo24HourFormat(hour, amPm) {
   if (amPm === 'PM' && hour !== 12) {
@@ -28,7 +29,8 @@ function setExtensionState(extensionId, enabled) {
   });
 }
 
-
+let checkedExtensions = [];
+let extensionsEnabled = false;
 
 // Function to get the total minutes since midnight from a time in 12-hour format (HH:mm AM/PM)
 function getTotalMinutesSinceMidnight(timeString) {
@@ -56,7 +58,7 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
       const endHour = data.endHour || 4; // Set a default end hour if not found
       const endMinute = data.endMinute || 0; // Set a default end minute if not found
       const endAmPm = data.endAmPm || 'PM'; // Set a default end AM/PM if not found
-      const checkedExtensions = data.checkedExtensions || []; // Set an empty array if not found
+      checkedExtensions = data.checkedExtensions || []; // Set an empty array if not found
       const activeDays = data.activeDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
       const now = new Date();
 
@@ -85,7 +87,7 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
       }
 
       // Calculate extensionsEnabled based on isWithinActiveTimeRange and other conditions
-      const extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
+      extensionsEnabled = isWithinActiveTimeRange && activeDays.includes(currentDay);
 
 
       // Get the current state of extensions
@@ -222,6 +224,26 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
+// Add an event listener to the onDisabled event
+chrome.management.onDisabled.addListener(function(extensionInfo) {
+  // Check if the disabled extension is in the list of checked extensions
+  const extensionId = extensionInfo.id;
+  const isCheckedExtension = checkedExtensions.includes(extensionId);
+
+  // Check if extensionsEnabled is true
+  if (isCheckedExtension && extensionsEnabled) {
+    // Re-enable the extension
+    setExtensionState(extensionId, true)
+      .then(() => {
+        // Console log for debugging
+        //console.log(`Extension ${extensionId} was re-enabled.`);
+      })
+      .catch((error) => {
+        console.error(`Failed to re-enable extension ${extensionId}:`, error);
+      });
+  }
+});
+
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(async function (message) {
   if (message.optionsUpdated) {
@@ -259,14 +281,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Function to handle the initial setup of alarms and extension toggling
 async function initialSetup() {
-  // Create Options context menu item
-  chrome.contextMenus.create({
-    id: "optionsMenu",
-    title: "Options",
-    contexts: ["browser_action"],
-    documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
-  });
-
   // Retrieve the start and end times from the Chrome storage
   const data = await new Promise((resolve) => {
     chrome.storage.local.get(
@@ -284,6 +298,13 @@ async function initialSetup() {
 
 // Start the initial setup when the extension is first loaded
 initialSetup();
+// Create Options context menu item
+chrome.contextMenus.create({
+  id: "optionsMenu",
+  title: "Options",
+  contexts: ["browser_action"],
+  documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
+});
 const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed);
 setTimeout(() => {
   chrome.alarms.getAll((alarms) => {
