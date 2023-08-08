@@ -248,8 +248,25 @@ chrome.runtime.onStartup.addListener(() => {
   handleExtensionToggle();
 });
 
+// Add an event lisener for clicking on 'Options' in context menu
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "optionsMenu") {
+    // Open the options page here
+    chrome.runtime.openOptionsPage();
+  }
+});
+
+
 // Function to handle the initial setup of alarms and extension toggling
 async function initialSetup() {
+  // Create Options context menu item
+  chrome.contextMenus.create({
+    id: "optionsMenu",
+    title: "Options",
+    contexts: ["browser_action"],
+    documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
+  });
+
   // Retrieve the start and end times from the Chrome storage
   const data = await new Promise((resolve) => {
     chrome.storage.local.get(
