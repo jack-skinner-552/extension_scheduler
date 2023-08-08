@@ -1,7 +1,5 @@
 // options.js
 
-import { config } from './config.js';
-
 let previousOptions = {};
 
 // Function to get the service worker registration asynchronously
@@ -157,7 +155,7 @@ function updateDocumentOptions(options) {
   document.getElementById('endAmPm').value = endAmPm;
 
   // Update the active days checkboxes with default values if options.activeDays is not defined or not an array
-  const activeDays = options.activeDays || config.defaultOptions.activeDays;
+  const activeDays = options.activeDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const activeDaysCheckboxes = document.querySelectorAll('.active-days-container input[type="checkbox"]');
   activeDaysCheckboxes.forEach(function (checkbox) {
     const day = checkbox.getAttribute('value');
@@ -165,7 +163,7 @@ function updateDocumentOptions(options) {
   });
 
   // Additional code to set Monday to Friday checkboxes to checked by default
-  const defaultActiveDays = config.defaultOptions.activeDays;
+  const defaultActiveDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   defaultActiveDays.forEach(function (day) {
     const checkbox = document.querySelector(`#activeDaysList input[value="${day}"]`);
     if (checkbox && !activeDays.includes(day)) {
@@ -345,7 +343,7 @@ function saveOptions() {
 
   // If no active days are checked, use the default active days (M-F)
   if (activeDays.length === 0) {
-    activeDays.push(...config.defaultOptions.activeDays);
+    activeDays.push(...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
   }
 
 
