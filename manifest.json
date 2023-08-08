@@ -5,6 +5,7 @@
   "description": "Schedule and toggle the behavior of selected extensions based on time and days.",
   "permissions": [
     "alarms",
+    "contextMenus",
     "management",
     "storage"
   ],
@@ -19,6 +20,7 @@
   "background": {
     "service_worker": "background.js"
   },
+  "options_page": "options.html",
   "icons": {
     "16": "images/icon-on.png",
     "48": "images/icon-on.png",
