@@ -252,6 +252,7 @@ chrome.management.onDisabled.addListener(function(extensionInfo) {
 // Add an event listener for the runtime.onInstalled event
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
+        // Perform actions when the extension is installed
     // Create Options context menu item
     chrome.contextMenus.create({
       id: "optionsMenu",
@@ -259,18 +260,11 @@ chrome.runtime.onInstalled.addListener((details) => {
       contexts: ["browser_action"],
       documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
     });
-    // Perform actions when the extension is installed
     console.log('Extension installed!');
-
-    // You can perform any setup or initialization here
-    // For example, creating default settings, context menus, etc.
 
   } else if (details.reason === 'update') {
     // Perform actions when the extension is updated
     console.log(`Extension updated from version ${details.previousVersion} to version ${chrome.runtime.getManifest().version}.`);
-
-    // You can perform any migration or update tasks here
-    // For example, updating settings, modifying existing features, etc.
   }
 });
 
