@@ -172,6 +172,15 @@ function updateDocumentOptions(options) {
   });
 }
 
+// Log a message to the background script
+function logToBackgroundConsole(message, data) {
+  const logMessage = {
+    message: message,
+    data: data
+  };
+  chrome.runtime.sendMessage({ logMessage: JSON.stringify(logMessage) });
+}
+
 // Event listener when the DOM content is loaded
 document.addEventListener('DOMContentLoaded', async function () {
   const extensionList = document.getElementById('extensionList');
@@ -329,6 +338,7 @@ window.addEventListener('beforeunload', function (event) {
 
 // Function to save options to Chrome storage
 function saveOptions() {
+  console.clear();
   // Get the checked extensions from the checkboxes
   const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
   const checkedExtensions = Array.from(extensionCheckboxes).map(function (checkbox) {
@@ -441,6 +451,7 @@ function saveOptions() {
 
     // Log the values in Chrome storage after save
     chrome.storage.local.get(null, function (data) {
+      logToBackgroundConsole('Values in Chrome storage after save:', data);
       // Update the values in the current HTML document
       updateDocumentOptions(data);
 
