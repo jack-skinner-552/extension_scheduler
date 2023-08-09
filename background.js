@@ -297,6 +297,13 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// Function to capture and log console messages
+function logConsoleMessages(message) {
+  console.clear();
+  const logData = JSON.parse(message);
+  console.log('Console log from extension:', logData.message);
+  console.log('Data:', logData.data);
+}
 
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(async function (message) {
@@ -315,6 +322,8 @@ chrome.runtime.onMessage.addListener(async function (message) {
 
     // Trigger the extension toggle based on the new settings
     await handleExtensionToggle();
+  } else if (message.logMessage) {
+    logConsoleMessages(message.logMessage);
   }
 });
 
