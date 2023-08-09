@@ -199,13 +199,13 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
 
   if (currentMinutes >= adjustedEndMinutes) {
-    // If the current time is after the Start time, add 24 hours to the Start Hour
+    // If the current time is after the Start time, add hoursBetweenDays to the Start Hour
     adjustedEndHour += hoursBetweenDays;
     adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
   }
 
   if (currentMinutes >= adjustedStartMinutes) {
-    // If the current time is after the End time, add 24 hours to the End Hour
+    // If the current time is after the End time, add hoursBetweenDays to the End Hour
     adjustedStartHour += hoursBetweenDays;
     adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
   }
@@ -274,6 +274,13 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// Function to capture and log console messages
+function logConsoleMessages(message) {
+  console.clear();
+  const logData = JSON.parse(message);
+  console.log('Console log from extension:', logData.message);
+  console.log('Data:', logData.data);
+}
 
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(async function (message) {
@@ -292,6 +299,8 @@ chrome.runtime.onMessage.addListener(async function (message) {
 
     // Trigger the extension toggle based on the new settings
     await handleExtensionToggle();
+  } else if (message.logMessage) {
+    logConsoleMessages(message.logMessage);
   }
 });
 
