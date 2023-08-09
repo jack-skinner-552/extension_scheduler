@@ -126,16 +126,6 @@ async function handleExtensionToggle(triggeredByAlarm = false, alarmName = '') {
         });
       });
 
-      // Schedule the next toggle using the Alarm API
-
-//       const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed)
-//
-//       setTimeout(() => {
-//         // Code to execute after the delay
-//         handleExtensionToggle();
-//       }, nextToggleDelay);
-
-
       if (triggeredByAlarm && (alarmName === 'extensionToggleAlarmEnd' || alarmName === 'extensionToggleAlarmStart')) {
         scheduleAlarmsForStartAndEndTimes(data);
       }
@@ -151,6 +141,8 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   const endHour = parseInt(data.endHour) || 4; // Set a default end hour if not found
   const endMinute = data.endMinute || 0; // Set a default end minute if not found
   const endAmPm = data.endAmPm || 'PM'; // Set a default end AM/PM if not found
+  const activeDays = data.activeDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const allDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   // Convert start and end times to 24-hour format
   let adjustedStartHour = convertTo24HourFormat(startHour, startAmPm);
@@ -158,8 +150,48 @@ function scheduleAlarmsForStartAndEndTimes(data) {
 
   // Get the current date and time
   const now = new Date();
+  const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
+
+  // Find the index of the current day in the activeDays array
+  const currentIndex = allDays.indexOf(currentDay);
+  console.log("currentIndex:", currentIndex);
+
+  // Calculate the index of the next active day
+  let nextIndex = (currentIndex + 1);
+  console.log("activeDays.length:", activeDays.length);
+
+  // Find the next active day that exists in the activeDays array
+  let nextActiveDay;
+  while (true) {
+    nextActiveDay = allDays[nextIndex % allDays.length];
+    if (activeDays.includes(nextActiveDay)) {
+      break;
+    }
+    nextIndex++;
+  }
+
+  console.log("nextIndex:", nextIndex);
+
+  // Calculate the difference between currentIndex and nextIndex
+  const indexDifference = nextIndex - currentIndex;
+
+  // Calculate the hours between currentDay and nextActiveDay
+  let hoursBetweenDays;
+  if (indexDifference === 7) {
+    // Only one day has been checked, set to 168 hours (7 days * 24 hours/day; next week, same day)
+    hoursBetweenDays = 168;
+  } else {
+    hoursBetweenDays = (indexDifference + allDays.length) % allDays.length * 24;
+  }
+
+  if (nextIndex >= 7) {
+    nextActiveDay = "next " + nextActiveDay;
+  }
+
+  console.log(`The next active day after ${currentDay} is ${nextActiveDay}.`);
+  console.log(`Hours between ${currentDay} and ${nextActiveDay}: ${hoursBetweenDays} hours.`);
 
   // Check if the current time is after both Start and End times
   const currentMinutes = currentHour * 60 + currentMinute;
@@ -168,13 +200,13 @@ function scheduleAlarmsForStartAndEndTimes(data) {
 
   if (currentMinutes >= adjustedEndMinutes) {
     // If the current time is after the Start time, add 24 hours to the Start Hour
-    adjustedEndHour += 24;
+    adjustedEndHour += hoursBetweenDays;
     adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
   }
 
   if (currentMinutes >= adjustedStartMinutes) {
     // If the current time is after the End time, add 24 hours to the End Hour
-    adjustedStartHour += 24;
+    adjustedStartHour += hoursBetweenDays;
     adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
   }
 
@@ -216,6 +248,32 @@ chrome.management.onDisabled.addListener(function(extensionInfo) {
       });
   }
 });
+
+// Add an event listener for the runtime.onInstalled event
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    // Create Options context menu item
+    chrome.contextMenus.create({
+      id: "optionsMenu",
+      title: "Options",
+      contexts: ["browser_action"],
+      documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
+    });
+    // Perform actions when the extension is installed
+    console.log('Extension installed!');
+
+    // You can perform any setup or initialization here
+    // For example, creating default settings, context menus, etc.
+
+  } else if (details.reason === 'update') {
+    // Perform actions when the extension is updated
+    console.log(`Extension updated from version ${details.previousVersion} to version ${chrome.runtime.getManifest().version}.`);
+
+    // You can perform any migration or update tasks here
+    // For example, updating settings, modifying existing features, etc.
+  }
+});
+
 
 // Add an event listener to receive messages from the options page
 chrome.runtime.onMessage.addListener(async function (message) {
@@ -271,13 +329,6 @@ async function initialSetup() {
 
 // Start the initial setup when the extension is first loaded
 initialSetup();
-// Create Options context menu item
-chrome.contextMenus.create({
-  id: "optionsMenu",
-  title: "Options",
-  contexts: ["browser_action"],
-  documentUrlPatterns: [`chrome-extension://${chrome.runtime.id}/*`]
-});
 const nextToggleDelay = 30 * 1000; // Delay in milliseconds (30 seconds, adjust as needed);
 setTimeout(() => {
   chrome.alarms.getAll((alarms) => {
