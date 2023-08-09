@@ -213,13 +213,13 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   let adjustedEndMinutes = getTotalMinutesSinceMidnight(`${endHour}:${endMinute} ${endAmPm}`);
 
   if (currentMinutes >= adjustedEndMinutes) {
-    // If the current time is after the Start time, add 24 hours to the Start Hour
+    // If the current time is after the Start time, add hoursBetweenDays to the Start Hour
     adjustedEndHour += hoursBetweenDays;
     adjustedEndMinutes = adjustedEndHour * 60 + endMinute;
   }
 
   if (currentMinutes >= adjustedStartMinutes) {
-    // If the current time is after the End time, add 24 hours to the End Hour
+    // If the current time is after the End time, add hoursBetweenDays to the End Hour
     adjustedStartHour += hoursBetweenDays;
     adjustedStartMinutes = adjustedStartHour * 60 + startMinute;
   }
