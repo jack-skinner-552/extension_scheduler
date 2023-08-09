@@ -299,7 +299,6 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 // Function to capture and log console messages
 function logConsoleMessages(message) {
-  console.clear();
   const logData = JSON.parse(message);
   console.log('Console log from extension:', logData.message);
   console.log('Data:', logData.data);

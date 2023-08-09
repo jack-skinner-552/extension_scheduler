@@ -338,7 +338,6 @@ window.addEventListener('beforeunload', function (event) {
 
 // Function to save options to Chrome storage
 function saveOptions() {
-  console.clear();
   // Get the checked extensions from the checkboxes
   const extensionCheckboxes = document.querySelectorAll('#extensionList input[type="checkbox"]:checked');
   const checkedExtensions = Array.from(extensionCheckboxes).map(function (checkbox) {
