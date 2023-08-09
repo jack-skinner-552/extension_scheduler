@@ -209,10 +209,6 @@ function scheduleAlarmsForStartAndEndTimes(data) {
   const endTimeStamp = endDateTime.getTime();
   console.log('End time alarm will trigger at:', new Date(endTimeStamp).toLocaleString());
   chrome.alarms.create('extensionToggleAlarmEnd', { when: endTimeStamp });
-
-  chrome.alarms.getAll((alarms) => {
-    console.log('Active Alarms:', alarms);
-  });
 }
 
 
